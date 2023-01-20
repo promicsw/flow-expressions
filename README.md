@@ -4,16 +4,20 @@
 
 Construct, ready to run,  Parsers of any complexity using a declarative fluent syntax in C#. The system is lightweight, fast, and loosely coupled components provide complete implementation flexibility.
 
+**Note:** This repo only contains documentation and examples of Flow Expressions. 
+The actual implementation is in the [Script-Utils](https://github.com/PromicSW/script-utils) library which also contains advanced *scanners* and other utilities.
 ## Building Flow Expressions
 
-Flow Expressions are defined by a structure of FexElements built via a Fluent API. This defines the logical flow and operations of the expression in a very readable format. Any logic than can be expressed as a Flow Expression (think flow chart) may be implemented. 
+Flow Expressions are defined by a structure of FexElements built via a Fluent API. This defines the logical flow and operations of the expression in a very readable format. 
 
+Any logic than can be expressed as a Flow Expression (think flow chart) may be implemented. 
 For starters only **Parsers** will be discussed in this document!
 
-> A Flow Expression operates on a **Context**, which is any environment that manages and provides input to the Flow Expression.
+> A Flow Expression operates on a user supplied **Context**, which is any environment that manages and provides input/content/state.
 >
-> **Note** For a Parser, the context would be a **Scanner** that handles text scanning and provides <i>Tokens</i> to operate on.<br/> 
-> A comprehensive FexScanner is provided (see scanner reference) but you can roll your own if required. 
+> For a Parser, the context would be a **Scanner** that manages text scanning and provides <i>Tokens</i> to operate on.<br/> 
+>
+> A comprehensive [FexScanner]((Docs/FexScannerExt.md)) is provided but you can roll your own if required. 
 
 The following example is a complete **Expression Parser**, including evaluation and error reporting:
 
@@ -28,19 +32,19 @@ public static void ExpressionEval() {
     */
 
     // Stack and stack operator to evaluate the expression
-    Stack<double> numStack = new Stack<double>()
+    Stack<double> numStack = new Stack<double>();
+
     void Calc(Func<double, double, double> op) {
         double num2 = numStack.Pop(), num1 = numStack.Pop();
         numStack.Push(op(num1, num2));
-    
-    var expr1 = "9 - ( 5.5 + 3 ) * 6 - 4 / ( 9 - 1 )"
-    Console.WriteLine($"Evaluating expression: {expr1}")
+    }
 
-    var parseError = new ScanErrorLog();
-    var scn = new FexScanner(expr1, parseError);
-    var fex = new FlowExpression<FexScanner>();
+    var expr1 = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )";
 
-    // Expression productions:
+    Console.WriteLine($"Evaluating expression: {expr1}");
+
+    var fex = new FexParser(expr1);  
+
     var expr = fex.Seq(s => s.RefName("expr")
         .Ref("factor")
         .RepOneOf(0, -1, r => r
@@ -53,7 +57,7 @@ public static void ExpressionEval() {
         .RepOneOf(0, -1, r => r
             .Seq(s => s.Ch('*').Ref("unary").Act(c => Calc((n1, n2) => n1 * n2)))
             .Seq(s => s.Ch('/').Ref("unary")
-                       .Assert(c => numStack.Peek() != 0, e => e.LogError("Division by 0")) // Trap division by 0
+                       .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0
                        .Act(c => Calc((n1, n2) => n1 / n2)))
          ));
 
@@ -69,11 +73,9 @@ public static void ExpressionEval() {
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
          ));
 
-    // Axiom (= where we start)
     var exprEval = fex.Seq(s => s.SetPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
-    Console.WriteLine(exprEval.Run(scn) ? $"Passed = {numStack.Pop():F4}"
-                                        : parseError.AsConsoleError("Expression Error:"));
+    Console.WriteLine(fex.Run(exprEval, () => $"Passed = {numStack.Pop():F4}", e => e.AsConsoleError("Expression Error:")));
 }
 ```
 
@@ -90,13 +92,13 @@ Parse error: Primary expected
 
 Available via Nuget
 
-> **Note:** Flow Expressions are actually implemented in the ScriptUtils library which may be found at the [script-utils repo](https://github.com/PromicSW/script-utils)
+> **Note:** Flow Expressions are actually implemented in the [Script-Utils](https://github.com/PromicSW/script-utils) library and are only documented with examples in this repo.
 
 Below is a basic console application that defines and runs a Flow Expression:
 ```csharp
-using Psw.ScriptUtil;
-using Psw.ScriptUtil.FlowExpressions;
-using Psw.ScriptUtil.Scanners;
+using Psw.ScriptUtils;
+using Psw.ScriptUtils.FlowExpressions;
+using Psw.ScriptUtils.Scanners;
 
 QuickStart();
 
@@ -140,7 +142,6 @@ void QuickStart() {
 - [Fex Element reference](Docs/FexElementsRef.md): Complete reference of all the Fex Elements (building blocks).
 - [FexScanner](Docs/FexScannerExt.md): The supplied Fex scanner and context extensions reference.
 - [Custom Scanner tutorial](Docs/CustomScanner.md): Describes how to build a custom scanner with examples.
-- **Note:** Flow Expressions are actually implemented in the ScriptUtils library which may be found at the [script-utils repo](https://github.com/PromicSW/script-utils)
 
 ## About
 

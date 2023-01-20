@@ -7,7 +7,7 @@ using FexExampleSet;
 using Psw.ScriptUtils.FlowExpressions;
 using Psw.ScriptUtils.Scanners;
 
-RunSamples();
+RunSamples2();
 
 
 void RunSamples() {
@@ -16,7 +16,7 @@ void RunSamples() {
         new Sample("Quick Start", () => QuickStart()),
         new Sample("Use Simple Scanner", () => DemoSimpleScanner()),
         new Sample("Expression Eval", () => ExpressionEval()),
-        //new Sample("Expression Eval 2", () => DocExamples.ExpressionEval2()),
+        new Sample("Expression Eval 2", () => ExpressionEval2()),
         new Sample("Expression REPL", () => ExpressionREPL()),
     };
 
@@ -43,7 +43,40 @@ void RunSamples() {
             }
         }
     }
+}
 
+
+void RunSamples2() {
+
+    var samples = new List<Sample> {
+        new Sample("Quick Start", () => QuickStart()),
+        new Sample("Use Simple Scanner", () => DemoSimpleScanner()),
+        new Sample("Expression Eval", () => ExpressionEval()),
+        new Sample("Expression Eval 2", () => ExpressionEval2()),
+        new Sample("Expression REPL", () => ExpressionREPL()),
+    };
+
+    var fex = new FlowExpression<NullContext>();
+
+    string val = "";
+    int i = 0;
+    fex.Rep0N(r => r
+        .ValidOp(c => { Console.WriteLine("Run Sample:"); i = 0; })
+        .Rep(samples.Count, r => r.Act(c => Console.WriteLine($"  {++i} - {samples[i-1].Name}")))
+        .Act(c => { Console.WriteLine("  Blank to Exit"); Console.Write("> "); })
+        .Op(o => !string.IsNullOrEmpty(val = Console.ReadLine()))
+        .Act(c => {
+            Console.Clear();
+            if (int.TryParse(val, out i)) {
+                if (i > 0 && i <= samples.Count) {
+                    Console.WriteLine($"Run: {samples[i - 1].Name}");
+                    samples[i - 1].Action();
+
+                    Console.WriteLine();
+                }
+            }
+        })
+    ).Run(new NullContext());
 }
 
 // QuickStart sample 
@@ -138,8 +171,7 @@ void ExpressionEval() {
     var expr = fex.Seq(s => s.RefName("expr")
         .Ref("factor")
         .RepOneOf(0, -1, r => r
-            //.Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
-            .Seq(s => s.Act(c => Console.WriteLine("Try +")).Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
+            .Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
             .Seq(s => s.Ch('-').Ref("factor").Act(c => Calc((n1, n2) => n1 - n2)))
          ));
 
@@ -168,6 +200,64 @@ void ExpressionEval() {
 
     Console.WriteLine(exprEval.Run(scn) ? $"Passed = {numStack.Pop():F4}"
                                         : parseError.AsConsoleError("Expression Error:"));
+}
+
+// Expression Evaluation - using FexParser
+void ExpressionEval2() {
+
+    /*
+     * Expression Grammar:
+     * expression     => factor ( ( '-' | '+' ) factor )* ;
+     * factor         => unary ( ( '/' | '*' ) unary )* ;
+     * unary          => ( '-' ) unary | primary ;
+     * primary        => NUMBER | "(" expression ")" ;
+    */
+
+    // Stack and stack operator to evaluate the expression
+    Stack<double> numStack = new Stack<double>();
+
+    void Calc(Func<double, double, double> op) {
+        double num2 = numStack.Pop(), num1 = numStack.Pop();
+        numStack.Push(op(num1, num2));
+    }
+
+    var expr1 = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )";
+
+    Console.WriteLine($"Evaluating expression: {expr1}");
+
+    var fex = new FexParser(expr1); // Use the FexParser convenience class for parser construction 
+
+    var expr = fex.Seq(s => s
+        .Ref("factor")
+        .RepOneOf(0, -1, r => r
+            .Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
+            .Seq(s => s.Ch('-').Ref("factor").Act(c => Calc((n1, n2) => n1 - n2)))
+         ));
+
+    var factor = fex.Seq(s => s.RefName("factor")
+        .Ref("unary")
+        .RepOneOf(0, -1, r => r
+            .Seq(s => s.Ch('*').Ref("unary").Act(c => Calc((n1, n2) => n1 * n2)))
+            .Seq(s => s.Ch('/').Ref("unary")
+                       .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0
+                       .Act(c => Calc((n1, n2) => n1 / n2)))
+         ));
+
+    var unary = fex.Seq(s => s.RefName("unary")
+        .OneOf(o => o
+            .Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
+            .Ref("primary")
+         ).OnFail("Primary expected"));
+
+    var primary = fex.Seq(s => s.RefName("primary")
+        .OneOf(o => o
+            .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
+            .Seq(s => s.NumDecimal(n => numStack.Push(n)))
+         ));
+
+    var exprEval = fex.Seq(s => s.SetPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
+
+    Console.WriteLine(fex.Run(exprEval, () => $"Passed = {numStack.Pop():F4}", e => e.AsConsoleError("Expression Error:")));
 }
 
 // Expression Evaluation REPL
@@ -299,6 +389,8 @@ void xExpressionREPL() {
 
     repl.Run(scn);
 }
+
+public class NullContext { }
 
 // Sample items record
 public class Sample

@@ -1,21 +1,25 @@
 
 
-# Fex Elements Reference {#id-toc}
+<a id="id-toc"></a>
+# Fex Elements Reference
 
 The *productions* of a Flow Expression are constructed via the various FexElements which will be discussed in the following sections. 
 
+> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class which returns FexElements which may be used in other productions or as the *Axiom* to run. 
+
 | Fex Element | Brief |
 |-------------|-------|
-|[`Seq(s => s...)`](#id-seq)| Sequence - Series of steps that must complete in full in order to pass.|
+|[`Seq(s => s...)`*](#id-seq)| Sequence - Series of steps that must complete in full in order to pass.|
 |[`Op(Func<Ctx, bool> op)`](#id-op)| Operator - Perform operation on the Context returning a true/false result. |
+|[`ValidOp(Func<Ctx> op)`](#id-validop)| Always valid operator - Perform operation on the Context and always returns true. |
 |[`Value<V>(Action<V> valueAction)`](#id-value)| Value Action - Bind and action to an operator that records a value.|
-|[`Opt(o => o...)`](#id-opt)| Optional - Optional sequence.|
-|[`OneOf(o => o...)`](#id-oneof)| One Of - Set of sequences that are *Or'd* together and one of them must succeed to pass.|
-|[`OptOneOf(o => o...)`](#id-optoneof)| Optional One Of - Optionally perform a OneOf.|
-|[`NotOneOf(o => o...)`](#id-notoneof)| Not One Of - Inverse of OneOf.|
+|[`Opt(o => o...)`* ](#id-opt)| Optional - Optional sequence.|
+|[`OneOf(o => o...)`*](#id-oneof)| One Of - Set of sequences that are *Or'd* together and one of them must succeed to pass.|
+|[`OptOneOf(o => o...)`*](#id-optoneof)| Optional One Of - Optionally perform a OneOf.|
+|[`NotOneOf(o => o...)`*](#id-notoneof)| Not One Of - Inverse of OneOf.|
 |[`BreakOn(o => o...)`](#id-notoneof)| Alias for NotOneOf - Reads better in loops.|
-|[`Rep(repMin, repMax, r => r...)`](#id-rep)| Repeat - Repeated sequences.|
-|[`RepOnOf(repMin, repMax, r => r...)`](#id-rep)| Repeat One Of - Repeated a OneOf expression.|
+|[`Rep(repMin, repMax, r => r...)`*](#id-rep)| Repeat - Repeated sequences.|
+|[`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof)| Repeat One Of - Repeated a OneOf expression.|
 |[`Fex(FlowExpr1, FlowExpr2, ...)`](#id-fex)| Include Expressions - Include a set of previously defined sub-expressions.|
 |[`Act(Action<Ctx> action)`](#id-act)| Action - Perform any external Action based on the current state of the production.|
 |[`OnFail(Action<Ctx> failAction)`](#id-onfail)| Fail Action - Perform an Action if the last production failed.|
@@ -28,7 +32,8 @@ The *productions* of a Flow Expression are constructed via the various FexElemen
 |[`Trace(Action<Ctx, object, bool> traceAction)`](#id-trace)| Tracing utility with value.|
 
 ---
-### Sequence: `Seq(s => s...)` {#id-seq}
+<a id="id-seq"></a>
+### Sequence: `Seq(s => s...)`
 A Sequence defines a series of steps that must complete in full in order to pass. Sequences are the primary building blocks of flow expressions:
 
 - A sequence may contain any compound (and nested) structure of elements including other sequences.
@@ -48,7 +53,8 @@ Seq(s => s
 [(toc)](#id-toc)
 
 ---
-### Operator: `Op(Func<Ctx, bool> op)` {#id-op}
+<a id="id-op"></a>
+### Operator: `Op(Func<Ctx, bool> op)`
 
 Op performs any operation on the Context (or *closure* environment) and returns a pass or failure result (true / false)
 
@@ -92,7 +98,18 @@ Op((c, v) => v.SetValue(c.IsAnyCh("+-"), c.Delim))
 [(toc)](#id-toc)
 
 ---
-### Value Action: `Value<V>(Action<V> valueAction)` {#id-value}
+<a id="id-validop"></a>
+### Valid Operator: `ValidOp(Func<Ctx> op)`
+
+ValidOp performs any operation on the Context (or *closure* environment) and always returns a pass/true.
+
+> Useful as the last element in a OneOf set to perform a default action if required.
+
+[(toc)](#id-toc)
+
+---
+<a id="id-value"></a>
+### Value Action: `Value<V>(Action<V> valueAction)`
 
 This binds an Action to an operator (Op) that recorded a value, and should follow directly after the Op:
 
@@ -112,7 +129,8 @@ Rep(3, r => r.Digit(v => acode += v))
 [(toc)](#id-toc)
 
 ---
-### Optional: `Opt(o => o...)` {#id-opt}
+<a id="id-opt"></a>
+### Optional: `Opt(o => o...)`
 
 Opt defines and optional sequence and the following rules apply:
 
@@ -133,7 +151,8 @@ Seq(s => s
 [(toc)](#id-toc)
 
 ---
-### One Of: `OneOf(o => o...)` {#id-oneof}
+<a id="id-oneof"></a>
+### One Of: `OneOf(o => o...)`
 
 OneOf defines a set of sequences that are *Or'd* together and one of them must succeed to pass:
 
@@ -157,7 +176,8 @@ Seq(s => s.RefName("primary")
 [(toc)](#id-toc)
 
 ---
-### Optional One Of: `OptOneOf(o => o...)` {#id-optoneof}
+<a id="id-optoneof"></a>
+### Optional One Of: `OptOneOf(o => o...)`
 
 Optionally perform a OneOf, equivalent to: `Opt(o => o.OneOf(t => t...))`
 
@@ -170,7 +190,8 @@ OptOneOf(0, -1, r => r
 [(toc)](#id-toc)
 
 ---
-### Not One Of: `NotOneOf(o => o...) / BreakOn(o => o...)` {#id-notoneof}
+<a id="id-notoneof"></a>
+### Not One Of: `NotOneOf(o => o...) / BreakOn(o => o...)`
 
 Inverse of OneOf where it passes if none of the inner-sequences pass. else it fails:
 
@@ -193,7 +214,8 @@ Rep0N(r => {
 [(toc)](#id-toc)
 
 ---
-### Repeat: `Rep(repMin, repMax, r => r...)` {#id-rep}
+<a id="id-rep"></a>
+### Repeat: `Rep(repMin, repMax, r => r...)`
 
 Rep defines a repeated sequence and the following rules apply:
 
@@ -218,7 +240,8 @@ Rep1N(r => r.Ch('a').Ch('b'));
 [(toc)](#id-toc)
 
 ---
-### Repeat One Of: `RepOneOf(repMin, repMax, r => r...)` {#id-reponeof}
+<a id="id-reponeof"></a>
+### Repeat One Of: `RepOneOf(repMin, repMax, r => r...)`
 
 Repeat a OneOf expression, equivalent to: `Rep(repMin, repMax, r => r.OneOf(o => o...))`
 
@@ -231,7 +254,8 @@ RepOneOf(0, -1, r => r
 [(toc)](#id-toc)
 
 ---
-### Include Expressions: `Fex(FlowExpr1, FlowExpr2, ...)` {#id-fex}
+<a id="id-fex"></a>
+### Include Expressions: `Fex(FlowExpr1, FlowExpr2, ...)`
 
 Include a set of previously defined sub-expressions:
 
@@ -248,7 +272,8 @@ var fullSequence = fex.Seq(s => s.Ch('{').Fex(abSequence, cdSequence).Ch('}'));
 [(toc)](#id-toc)
 
 ---
-### Action: `Act(Action<Ctx> action)` {#id-act}
+<a id="id-act"></a>
+### Action: `Act(Action<Ctx> action)`
 
 Perform any Action based on the current state of the production. E.g.:
 
@@ -266,7 +291,8 @@ Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
 [(toc)](#id-toc)
 
 ---
-### Fail Action: `OnFail(Action<Ctx> failAction)` {#id-onfail}
+<a id="id-onfail"></a>
+### Fail Action: `OnFail(Action<Ctx> failAction)`
 
 Perform an Action if the last production failed:
 
@@ -283,7 +309,8 @@ Seq(s => s
 [(toc)](#id-toc)
 
 ---
-### Force Fail Action: `Fail(Action<Ctx> failAction)` {#id-fail}
+<a id="id-fail"></a>
+### Force Fail Action: `Fail(Action<Ctx> failAction)`
 
 Forces a failure and performs the failAction. Can use this as the last operation in a OneOf set for error messages / other.
 
@@ -298,7 +325,8 @@ pfe.OneOf(s => s
 [(toc)](#id-toc)
 
 ---
-### Assert: `Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)` {#id-assert}
+<a id="id-assert"></a>
+### Assert: `Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`
 
 Assert if a condition is true. Returns false and performs failAction on failure.
 
@@ -310,7 +338,8 @@ Seq(s => s.Ch('/').Ref("unary")
 [(toc)](#id-toc)
 
 ---
-### Forward Reference: `RefName(string name),  Ref(string refName)` {#id-ref}
+<a id="id-ref"></a>
+### Forward Reference: `RefName(string name),  Ref(string refName)`
 
 These elements facilitate *Forward Referencing* and/or *Recursion* (see the Expression parser for an example):
 
@@ -330,7 +359,8 @@ Seq(s => s.RefName("expr") // Give this sequence a name which can be referenced 
 [(toc)](#id-toc)
 
 ---
-### Optional Self Recursion: `OptSelf()` {#id-optself}
+<a id="id-optself"></a>
+### Optional Self Recursion: `OptSelf()`
 
 Optional recursive inclusion of the current production sequence within itself.
 
@@ -352,7 +382,8 @@ A Flow expression implements recursion via Forward Referencing, OptSelf or Fex i
 [(toc)](#id-toc)
 
 ---
-### Pre-Operations: `SetPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)` {#id-preop}
+<a id="id-preop"></a>
+### Pre-Operations: `SetPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`
 
 PreOps execute before an Op executes and are typically used to skip spaces, comments and newlines etc. before tokens when parsing scripts. 
 
@@ -370,7 +401,8 @@ See the Expression example which uses a SetPreOp to skip all spaces before the *
 [(toc)](#id-toc)
 
 ---
-### Tracing : `Trace(Action<Ctx, bool> traceAction)` <br/> Tracing': `Trace(Action<Ctx, object, bool> traceAction)` {#id-trace}
+<a id="id-trace"></a>
+### Tracing : `Trace(Action<Ctx, bool> traceAction)` <br/> Tracing': `Trace(Action<Ctx, object, bool> traceAction)`
 
 Trace action to perform on last Op. Typically display a message as a debugging aid. Should directly follow last Op:
 
