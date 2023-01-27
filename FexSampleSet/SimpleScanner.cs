@@ -55,7 +55,7 @@ namespace FexExampleSet
         // Operator extension that records a value
         // Check for a char match and provide a valueAction Delegate on the value
         public static FexBuilder<T> AnyCh<T>(this FexBuilder<T> exp, string matchChars, Action<char> valueAction = null) where T : SimpleScanner
-            => exp.Op((c, v) => v.SetValue(c.IsAnyCh(matchChars), c.Delim)).Value(valueAction);
+            => exp.Op((c, v) => v.SetValue(c.IsAnyCh(matchChars), c.Delim)).ActValue(valueAction);
 
         public static FexBuilder<T> Sp<T>(this FexBuilder<T> exp) where T : SimpleScanner
             => exp.Op(c => { c.SkipSp(); return true; });

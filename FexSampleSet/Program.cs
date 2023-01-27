@@ -196,7 +196,7 @@ void ExpressionEval() {
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
          ));
 
-    var exprEval = fex.Seq(s => s.SetPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
+    var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
     Console.WriteLine(exprEval.Run(scn) ? $"Passed = {numStack.Pop():F4}"
                                         : parseError.AsConsoleError("Expression Error:"));
@@ -255,7 +255,7 @@ void ExpressionEval2() {
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
          ));
 
-    var exprEval = fex.Seq(s => s.SetPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
+    var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
     Console.WriteLine(fex.Run(exprEval, () => $"Passed = {numStack.Pop():F4}", e => e.AsConsoleError("Expression Error:")));
 }
@@ -305,7 +305,7 @@ void ExpressionREPL() {
             .Seq(s => s.Ch('a').Act(c => numStack.Push(ans)))
          ));
 
-    var exprEval = fex.Seq(s => s.SetPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
+    var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
     var repl = fex.Rep0N(r => r
         .Op(c => {
@@ -340,7 +340,7 @@ void xExpressionREPL() {
     }
 
     var expr = fex.Seq(s => s.RefName("expr")
-        .SetPreOp(c => c.SkipSp())
+        .GlobalPreOp(c => c.SkipSp())
         .Ref("factor")
         .RepOneOf(0, -1, r => r
             .Seq(s => s.Ch('+').Ref("factor").Act(c => DoOp2((n1, n2) => n1 + n2, "+")))

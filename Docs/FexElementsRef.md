@@ -5,29 +5,29 @@
 
 The *productions* of a Flow Expression are constructed via the various FexElements which will be discussed in the following sections. 
 
-> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class which returns FexElements which may be used in other productions or as the *Axiom* to run. 
+> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class to return FexElements which may be used in other productions or as the *Axiom* to run. 
 
 | Fex Element | Brief |
 |-------------|-------|
-|[`Seq(s => s...)`*](#id-seq)| Sequence - Series of steps that must complete in full in order to pass.|
-|[`Op(Func<Ctx, bool> op)`](#id-op)| Operator - Perform operation on the Context returning a true/false result. |
-|[`ValidOp(Func<Ctx> op)`](#id-validop)| Always valid operator - Perform operation on the Context and always returns true. |
-|[`Value<V>(Action<V> valueAction)`](#id-value)| Value Action - Bind and action to an operator that records a value.|
-|[`Opt(o => o...)`* ](#id-opt)| Optional - Optional sequence.|
-|[`OneOf(o => o...)`*](#id-oneof)| One Of - Set of sequences that are *Or'd* together and one of them must succeed to pass.|
-|[`OptOneOf(o => o...)`*](#id-optoneof)| Optional One Of - Optionally perform a OneOf.|
-|[`NotOneOf(o => o...)`*](#id-notoneof)| Not One Of - Inverse of OneOf.|
-|[`BreakOn(o => o...)`](#id-notoneof)| Alias for NotOneOf - Reads better in loops.|
-|[`Rep(repMin, repMax, r => r...)`*](#id-rep)| Repeat - Repeated sequences.|
-|[`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof)| Repeat One Of - Repeated a OneOf expression.|
-|[`Fex(FlowExpr1, FlowExpr2, ...)`](#id-fex)| Include Expressions - Include a set of previously defined sub-expressions.|
-|[`Act(Action<Ctx> action)`](#id-act)| Action - Perform any external Action based on the current state of the production.|
-|[`OnFail(Action<Ctx> failAction)`](#id-onfail)| Fail Action - Perform an Action if the last production failed.|
-|[`Fail(Action<Ctx> failAction)`](#id-fail)| Force Fail Action - Force a failure and perform an Action.|
-|[`Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`](#id-assert)| Assert if a condition is true else performs failAction.|
+|[`Seq(s => s...)`*](#id-seq)| **Sequence:** Series of steps that must complete in full in order to pass.|
+|[`Op(Func<Ctx, bool> op)`](#id-op)| **Operator:** Perform operation on the Context returning a true/false result. |
+|[`ValidOp(Func<Ctx> op)`](#id-validop)| **Always valid operator:** Perform operation on the Context and always returns true. |
+|[`ActValue<V>(Action<V> valueAction)`](#id-value)| **Value Action:** Bind and action to an operator that records a value.|
+|[`Opt(o => o...)`* ](#id-opt)| **Optional:** Optional sequence.|
+|[`OneOf(o => o...)`*](#id-oneof)| **One Of:** Set of sequences that are *Or'd* together and one of them must succeed to pass.|
+|[`OptOneOf(o => o...)`*](#id-optoneof)| **Optional One Of:** Optionally perform a OneOf.|
+|[`NotOneOf(o => o...)`*](#id-notoneof)| **Not One Of:** Inverse of OneOf.|
+|[`BreakOn(o => o...)`](#id-notoneof)| **Alias for NotOneOf:** Reads better in loops.|
+|[`Rep(repMin, repMax, r => r...)`*](#id-rep)| **Repeat:** Repeated sequences.|
+|[`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof)| **Repeat One Of:** Repeated a OneOf expression.|
+|[`Fex(FlowExpr1, FlowExpr2, ...)`](#id-fex)| **Include Expressions:** Include a set of previously defined sub-expressions.|
+|[`Act(Action<Ctx> action)`](#id-act)| **Action:** Perform any external Action based on the current state of the production.|
+|[`OnFail(Action<Ctx> failAction)`](#id-onfail)| **Fail Action:**  Perform an Action if the last operator or production failed.|
+|[`Fail(Action<Ctx> failAction)`](#id-fail)| **Force Fail Action:** Force a failure and perform an Action.|
+|[`Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`](#id-assert)| **Assert** if a condition is true else performs failAction.|
 |[`RefName(string name),  Ref(string refName)`](#id-ref)| Forward Referencing and inclusion.|
 |[`OptSelf()`](#id-optself)| Optional recursive inclusion of the current production sequence within itself.|
-|[`SetPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`](#id-preop)| Pre-Operations - Attach pre-operations to operators.|
+|[`GlobalPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`](#id-preop)| **Pre-Operations:** Attach pre-operations to operators.|
 |[`Trace(Action<Ctx, bool> traceAction)`](#id-trace)| Tracing utility.|
 |[`Trace(Action<Ctx, object, bool> traceAction)`](#id-trace)| Tracing utility with value.|
 
@@ -92,8 +92,8 @@ Use to define Op's that produce and record a value:
 // Else IsAnyCh(...) returns false
 Op((c, v) => v.SetValue(c.IsAnyCh("+-"), c.Delim))
 
-// This would typically be followed by a Value element 
-.Value<char>(v => v...)
+// This would typically be followed by a Value Action element 
+.ActValue<char>(v => v...)
 ```
 [(toc)](#id-toc)
 
@@ -109,7 +109,7 @@ ValidOp performs any operation on the Context (or *closure* environment) and alw
 
 ---
 <a id="id-value"></a>
-### Value Action: `Value<V>(Action<V> valueAction)`
+### Value Action: `ActValue<V>(Action<V> valueAction)`
 
 This binds an Action to an operator (Op) that recorded a value, and should follow directly after the Op:
 
@@ -121,7 +121,7 @@ This binds an Action to an operator (Op) that recorded a value, and should follo
 
 ```csharp
 // Basic form where Digit() records the digit character just read
-Rep(3, r => r.Digit().Value<char>(v => acode += v))
+Rep(3, r => r.Digit().ActValue<char>(v => acode += v))
 
 // Context Operator Extension configured to operate on the value directly
 Rep(3, r => r.Digit(v => acode += v))
@@ -383,7 +383,7 @@ A Flow expression implements recursion via Forward Referencing, OptSelf or Fex i
 
 ---
 <a id="id-preop"></a>
-### Pre-Operations: `SetPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`
+### Pre-Operations: `GlobalPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`
 
 PreOps execute before an Op executes and are typically used to skip spaces, comments and newlines etc. before tokens when parsing scripts. 
 
@@ -391,7 +391,7 @@ A PreOp is efficient as it will execute only once while trying several *lookahea
 
 | Name | Description |
 |-------|-------------|
-|`SetPreOp(Action<Ctx> preOp)`|Global setting to automatically attache to all operators.|
+|`GlobalPreOp(Action<Ctx> preOp)`|Global setting to automatically attach to all operators.|
 |`PreOp(Action<Ctx> preOp)`| Use directly after an operator to attach/override a PreOp|
 
 See the Expression example which uses a SetPreOp to skip all spaces before the *tokens*
