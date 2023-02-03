@@ -5,7 +5,7 @@
 Construct, ready to run,  Parsers of any complexity using a declarative fluent syntax in C#. The system is lightweight, fast, and loosely coupled components provide complete implementation flexibility.
 
 **Note:** This repo only contains documentation and examples of Flow Expressions. 
-The actual implementation is in the [Script-Utils](https://github.com/PromicSW/script-utils) library which also contains advanced *scanners/lexers* and other utilities.
+The actual implementation is in the [Script-Utils](https://github.com/PromicSW/script-utils) library which also contains advanced *scanners* and other utilities.
 ## Building Flow Expressions
 
 Flow Expressions are defined by a structure of FexElements built via a Fluent API. This defines the logical flow and operations of the expression in a very readable format. 
@@ -31,34 +31,29 @@ public static void ExpressionEval() {
      * primary        => NUMBER | "(" expression ")" ;
     */
 
-    // Stack and stack operator to evaluate the expression
+    // Number Stack for calculations
     Stack<double> numStack = new Stack<double>();
-
-    void Calc(Func<double, double, double> op) {
-        double num2 = numStack.Pop(), num1 = numStack.Pop();
-        numStack.Push(op(num1, num2));
-    }
 
     var expr1 = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )";
 
     Console.WriteLine($"Evaluating expression: {expr1}");
 
-    var fex = new FexParser(expr1);  
+    var fex = new FexParser(expr1); // Use the FexParser convenience class for parser construction 
 
-    var expr = fex.Seq(s => s.RefName("expr")
+    var expr = fex.Seq(s => s
         .Ref("factor")
         .RepOneOf(0, -1, r => r
-            .Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
-            .Seq(s => s.Ch('-').Ref("factor").Act(c => Calc((n1, n2) => n1 - n2)))
+            .Seq(s => s.Ch('+').Ref("factor").Act(c => numStack.Push(numStack.Pop() + numStack.Pop())))
+            .Seq(s => s.Ch('-').Ref("factor").Act(c => numStack.Push(-numStack.Pop() + numStack.Pop())))
          ));
 
     fex.Seq(s => s.RefName("factor")
         .Ref("unary")
         .RepOneOf(0, -1, r => r
-            .Seq(s => s.Ch('*').Ref("unary").Act(c => Calc((n1, n2) => n1 * n2)))
+            .Seq(s => s.Ch('*').Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
             .Seq(s => s.Ch('/').Ref("unary")
                        .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0
-                       .Act(c => Calc((n1, n2) => n1 / n2)))
+                       .Act(c => numStack.Push(1/numStack.Pop() * numStack.Pop())))
          ));
 
     fex.Seq(s => s.RefName("unary")
@@ -69,13 +64,14 @@ public static void ExpressionEval() {
 
     fex.Seq(s => s.RefName("primary")
         .OneOf(o => o
-            .Seq(e => e.Ch('(').Ref("expr").Ch(')').OnFail(") expected"))
+            .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
          ));
 
     var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
     Console.WriteLine(fex.Run(exprEval, () => $"Passed = {numStack.Pop():F4}", e => e.AsConsoleError("Expression Error:")));
+
 }
 ```
 

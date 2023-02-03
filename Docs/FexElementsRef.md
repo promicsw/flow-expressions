@@ -5,7 +5,7 @@
 
 The *productions* of a Flow Expression are constructed via the various FexElements which will be discussed in the following sections. 
 
-> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class to return FexElements which may be used in other productions or as the *Axiom* to run. 
+> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class to return FexElements which may then be used in other productions or as the *Axiom* to run. 
 
 | Fex Element | Brief |
 |-------------|-------|
