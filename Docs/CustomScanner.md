@@ -4,7 +4,7 @@ This tutorial describes how to construct a custom Scanner for use with Flow Expr
 
 > Note: A comprehensive Scanner is included with Flow Expressions - which may be all you need
 
-The simple Scanner below takes a source string and then provides a few scanning services/methods:
+The simple Scanner below takes a source string and then provides a few scanning services:
 
 ```csharp
 public class SimpleScanner {
@@ -49,7 +49,7 @@ public class SimpleScanner {
 Now the Scanner may be used as follows:
 
 ```csharp
-public static void SimpleScanner1() {
+public static void DemoSimpleScanner1() {
     var scn = new SimpleScanner(" N3 N1N2-abc");
     var fex = new FlowExpression<SimpleScanner>();
 
@@ -104,7 +104,7 @@ public static class FexSimpleScannerExt {
 And now it may be used as follows (which is much easier to read and work with)
 
 ```csharp
-public static void SimpleScanner2() {
+public static void DemoSimpleScanner2() {
     var scn = new SimpleScanner(" N3 N1N2-abc");
     var fex = new FlowExpression<SimpleScanner>();
 

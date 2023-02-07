@@ -1,6 +1,7 @@
 # class FexScannerExt
 
-FlowExpressions Context Operator Extensions for FexScanner (FexScanner is an alias for ScriptScanner)
+FlowExpressions Context Operator Extensions for FexScanner 
+(FexScanner is an alias for ScriptScanner - reference in the [Script-Utils](https://github.com/PromicSW/script-utils) repo)
 
 These extend FexBuilder\<T> (where T is FexScanner) 
 to add Op(operators) and other methods bound to FexScanner (i.e. the Context)

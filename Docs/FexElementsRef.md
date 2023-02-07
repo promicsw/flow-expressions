@@ -5,13 +5,24 @@
 
 The *productions* of a Flow Expression are constructed via the various FexElements which will be discussed in the following sections. 
 
-> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class to return FexElements which may then be used in other productions or as the *Axiom* to run. 
+The expression is constructed via a FexBuilder class that provides the fluent 
+mechanism via methods of the following basic form (where T is the context):
+```csharp
+ public FexBuilder<T> Seq(Action<FexBuilder<T>> buildFex)
+```
+The `FlowExpression<T>` class is used create FexElements which may be used in other productions (see Fex(...) below) or as the *Axiom* to run.
+```csharp
+public FexElement<T> Seq(Action<FexBuilder<T>> buildFex)
+```
+
+
+> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class.
 
 | Fex Element | Brief |
 |-------------|-------|
 |[`Seq(s => s...)`*](#id-seq)| **Sequence:** Series of steps that must complete in full in order to pass.|
-|[`Op(Func<Ctx, bool> op)`](#id-op)| **Operator:** Perform operation on the Context returning a true/false result. |
-|[`ValidOp(Func<Ctx> op)`](#id-validop)| **Always valid operator:** Perform operation on the Context and always returns true. |
+|[`Op(Func<Ctx, bool> op)`](#id-op)| **Operator:** Perform an operation on the Context returning a true/false result. |
+|[`ValidOp(Action<Ctx> action)`](#id-validop)| **Always valid operator:** Perform and operation on the Context and always returns true. |
 |[`ActValue<V>(Action<V> valueAction)`](#id-value)| **Value Action:** Bind and action to an operator that records a value.|
 |[`Opt(o => o...)`* ](#id-opt)| **Optional:** Optional sequence.|
 |[`OneOf(o => o...)`*](#id-oneof)| **One Of:** Set of sequences that are *Or'd* together and one of them must succeed to pass.|
@@ -22,6 +33,7 @@ The *productions* of a Flow Expression are constructed via the various FexElemen
 |[`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof)| **Repeat One Of:** Repeated a OneOf expression.|
 |[`Fex(FlowExpr1, FlowExpr2, ...)`](#id-fex)| **Include Expressions:** Include a set of previously defined sub-expressions.|
 |[`Act(Action<Ctx> action)`](#id-act)| **Action:** Perform any external Action based on the current state of the production.|
+|[`RepAct(int repeat, Action<Ctx, int> action)`](#id-repact)| **Repeat Action:** Perform any external repeated Action based on the current state of the production.|
 |[`OnFail(Action<Ctx> failAction)`](#id-onfail)| **Fail Action:**  Perform an Action if the last operator or production failed.|
 |[`Fail(Action<Ctx> failAction)`](#id-fail)| **Force Fail Action:** Force a failure and perform an Action.|
 |[`Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`](#id-assert)| **Assert** if a condition is true else performs failAction.|
@@ -99,11 +111,21 @@ Op((c, v) => v.SetValue(c.IsAnyCh("+-"), c.Delim))
 
 ---
 <a id="id-validop"></a>
-### Valid Operator: `ValidOp(Func<Ctx> op)`
+### Valid Operator: `ValidOp(Action<Ctx> action)`
 
 ValidOp performs any operation on the Context (or *closure* environment) and always returns a pass/true.
 
 > Useful as the last element in a OneOf set to perform a default action if required.
+> Equivalent to: `Op(c => { action(c); return true; })`
+
+```csharp
+OneOf(o => o
+    .Seq(...)
+    .Seq(...)
+     // Will execute if the above sequences fail making the OneOf valid
+    .ValidOp(c => c...)
+);
+```
 
 [(toc)](#id-toc)
 
@@ -287,6 +309,22 @@ Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
 
 // E.g. Negate the top stack value
 Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
+```
+[(toc)](#id-toc)
+
+---
+<a id="id-repact"></a>
+### Repeat Action: `RepAct(int repeat, Action<Ctx, int> action)`
+
+Perform any repeated Action based on the current state of the production. E.g.:
+
+- Set (or access) variables in the context or *closure*
+- Perform operations etc.
+- Note: The RepAct element has no affect on the validity of a sequence and may be used anywhere, even at the beginning.
+
+```csharp
+// c = context, i = 0 based index 
+RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
 ```
 [(toc)](#id-toc)
 
