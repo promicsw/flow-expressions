@@ -412,9 +412,9 @@ Seq(s => s.Digit().OptSelf().IsEos());
 ---
 ### Recursion Mechanism notes
 
-A Flow expression implements recursion via Forward Referencing, OptSelf or Fex inclusion.
+A Flow expressions implement recursion via Forward Referencing, OptSelf or Fex inclusion.
 
-> **Note** Flow Expressions do not support [*Left Recursion*](https://www.tutorialspoint.com/what-is-left-recursion-and-how-it-is-eliminated) (which will cause an endless loop and possibly a stack overflow)
+> **Note** Flow Expressions do not support [*Left Recursion*](https://en.wikipedia.org/wiki/Left_recursion) (which will cause an endless loop and possibly a stack overflow)
 
 
 [(toc)](#id-toc)
