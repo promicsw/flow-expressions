@@ -7,13 +7,6 @@ Construct, ready to run,  Parsers of any complexity using a declarative fluent s
 **Note:** This repo only contains documentation and examples of Flow Expressions. 
 The actual implementation is in the [Script-Utils](https://github.com/PromicSW/script-utils) library which also contains advanced *scanners* and other utilities.
 
-[![NuGet version (SoftCircuits.Silk)](https://img.shields.io/nuget/v/SoftCircuits.Silk.svg?style=flat-square)](https://www.nuget.org/packages/SoftCircuits.Silk/)
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RGQ8NSYPA59FL)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=59LH5AHNQ8XZW)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](apretorius@acenet.co.za)
-![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)
-
-
 ## Building Flow Expressions
 
 Flow Expressions are defined by a structure of *FexElements* built via a Fluent API. This defines the logical flow and operations of the expression in a very readable format. 
@@ -153,7 +146,7 @@ Flow Expressions provide a novel mechanism of constructing parsers using a simpl
 Having developed several programming languages and parsers in the past I came up with this idea as an experiment. 
 It turned out so well, and I find it far more intuitive than say Parser Combinators and PEG, that I decided to share it.
 
-> It actually makes parsers construction quite fun as you can achieve a lot with a few lines of code, while the system does all the heavy lifting.
+> It actually makes parser construction quite fun as you can achieve a lot with a few lines of code, while the system does all the heavy lifting.
 >
 > Maybe some of you could help with suggestions, a few nice tutorials and examples etc.
 
@@ -163,6 +156,7 @@ Flow Expressions have since been used to create sophisticated parsers for variou
 - GenCodeDoc - extract and generate code reference documentation (some of reference material here was generated this way)
 - Several others...
 
+> A potential future extension is to provide a *lookahead* mechanism - will see if there is any interest.
 ## Versatility of Flow Expressions
 Flow Expressions are not limited to parsing and can be used to implement other kinds of *flow logic*. 
 
@@ -177,7 +171,7 @@ Run Sample:
 >
 ```
 
-The REPL menu could be hand coded as below:
+The REPL menu via conventional coding below:
 
 ```csharp
 void RunSamples() {
