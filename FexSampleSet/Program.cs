@@ -4,8 +4,7 @@
 // -----------------------------------------------------------------------------
 
 using FexExampleSet;
-using Psw.ScriptUtils.FlowExpressions;
-using Psw.ScriptUtils.Scanners;
+using Psw.FlowExpressions;
 
 RunSamplesFex();
 

@@ -5,8 +5,6 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PswLib", "PswLib", "{A590834B-99FF-44C4-834E-F4DAF79A68DD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Psw.ScriptUtils", "..\ScriptUtils\Psw.ScriptUtils\Psw.ScriptUtils.csproj", "{87A40439-3898-46F9-905D-320EFB54936B}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C4B8C127-E46C-47AD-BFB4-7054372EC975}"
 	ProjectSection(SolutionItems) = preProject
 		LICENSE.txt = LICENSE.txt
@@ -22,26 +20,34 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{16EDBBE2-1
 		Docs\FexScannerExt.md = Docs\FexScannerExt.md
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Psw.Scanners", "..\Scanners\Psw.Scanners\Psw.Scanners.csproj", "{F4C43D31-8129-46C3-AC6D-1B4553166296}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Psw.FlowExpressions", "Psw.FlowExpressions\Psw.FlowExpressions.csproj", "{1F9476C1-73A0-4755-91BF-09B94863CD46}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{87A40439-3898-46F9-905D-320EFB54936B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{87A40439-3898-46F9-905D-320EFB54936B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{87A40439-3898-46F9-905D-320EFB54936B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{87A40439-3898-46F9-905D-320EFB54936B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8136AD86-0F27-4A2D-A7E4-9487EE62864D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8136AD86-0F27-4A2D-A7E4-9487EE62864D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8136AD86-0F27-4A2D-A7E4-9487EE62864D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8136AD86-0F27-4A2D-A7E4-9487EE62864D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4C43D31-8129-46C3-AC6D-1B4553166296}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4C43D31-8129-46C3-AC6D-1B4553166296}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4C43D31-8129-46C3-AC6D-1B4553166296}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4C43D31-8129-46C3-AC6D-1B4553166296}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F9476C1-73A0-4755-91BF-09B94863CD46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F9476C1-73A0-4755-91BF-09B94863CD46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F9476C1-73A0-4755-91BF-09B94863CD46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F9476C1-73A0-4755-91BF-09B94863CD46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{87A40439-3898-46F9-905D-320EFB54936B} = {A590834B-99FF-44C4-834E-F4DAF79A68DD}
+		{F4C43D31-8129-46C3-AC6D-1B4553166296} = {A590834B-99FF-44C4-834E-F4DAF79A68DD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2832B6B5-77D6-462B-98D5-36D589EEC3B6}

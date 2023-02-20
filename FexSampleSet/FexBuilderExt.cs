@@ -3,7 +3,7 @@
 // Licensed under the MIT License (MIT).
 // -----------------------------------------------------------------------------
 
-using Psw.ScriptUtils.FlowExpressions;
+using Psw.FlowExpressions;
 
 namespace FexExampleSet
 {
