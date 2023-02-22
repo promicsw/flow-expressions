@@ -7,7 +7,7 @@ to add Op(operators) and other methods bound to FexScanner (i.e. the Context)
 
 > **Note:** Several methods record the scanned text in Token (of the underlying scanner)
 > and can be accessed via:
-> - ActToken / ActTrimToken
+> - ActToken / ActTrimToken / ActStripToken / ActTrimStripToken
 > - Act(c => c.Token...)
 
 Basic extension example:

@@ -17,7 +17,7 @@ namespace Psw.FlowExpressions
     /// 
     /// > **Note:** Several methods record the scanned text in Token (of the underlying scanner)
     /// > and can be accessed via:
-    /// > - ActToken / ActTrimToken
+    /// > - ActToken / ActTrimToken / ActStripToken / ActTrimStripToken
     /// > - Act(c => c.Token...)
     /// 
     /// Basic extension example:
