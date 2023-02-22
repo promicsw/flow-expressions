@@ -17,7 +17,7 @@ For starters only **Parsers** will be discussed in this document!
 >
 > For a Parser, the context would be a **Scanner** that manages text scanning and provides <i>Tokens</i> to operate on.<br/> 
 >
-> A comprehensive [FexScanner]((Docs/FexScannerExt.md)) is provided (derived from *ScriptScanner* in the [Scanners](https://github.com/PromicSW/scanners) repo/library) but you can roll your own if required. 
+> A comprehensive [FexScanner](Docs/FexScannerExt.md) is provided (derived from *ScriptScanner* in the [Scanners](https://github.com/PromicSW/scanners) repo/library) but you can roll your own if required. 
 
 The following example is a complete **Expression Parser**, including evaluation and error reporting:
 
