@@ -48,10 +48,16 @@ namespace Psw.FlowExpressions
             => actToken == null ? exp : exp.Act(c => actToken(c.TrimToken));
 
         /// <summary>
-        /// Perform an Action (Act) with the current Token with all comments removed.
+        /// Perform an Action (Act) with the current Token stripped of all comments
         /// </summary>
-        public static FexBuilder<T> ActTokenStripComments<T>(this FexBuilder<T> exp, Action<string> actToken) where T : FexScanner
-            => actToken == null ? exp : exp.Act(c => actToken(c.TokenStripComments));
+        public static FexBuilder<T> ActStripToken<T>(this FexBuilder<T> exp, Action<string> actToken) where T : FexScanner
+            => actToken == null ? exp : exp.Act(c => actToken(c.StripToken));
+
+        /// <summary>
+        /// Perform an Action (Act) with the current Token trimmed and stripped of all comments.
+        /// </summary>
+        public static FexBuilder<T> ActTrimStripToken<T>(this FexBuilder<T> exp, Action<string> actToken) where T : FexScanner
+            => actToken == null ? exp : exp.Act(c => actToken(c.TrimStripToken));
 
         /// <summary>
         /// Check if the current Token is not null or WhiteSpace
@@ -415,8 +421,10 @@ namespace Psw.FlowExpressions
         /// <summary>
         /// Scan a List of the form: ( item1, item 2 ... )<br/>
         /// - Note: The next non-whitespace character must be the Opening list delimiter.<br/>
-        /// - Item: Delimited string (recorded without delimiters) | text up to next separator or newline | block (recorded without block delimiters)<br/>
-        /// - All items are trimmed and blank items are not recorded.
+        /// - Item type 1: All text up to next closing delim or separator (logged trimmed)
+        /// - Item type 2: A string literal - may NOT span a line! (logged verbatim)
+        /// - Item type 3: Block delimited text (logged verbatim) - use for multi-line text. 
+        /// - Blank items are not recorded.
         /// </summary>
         /// <param name="delims">Opening and closing list delimiter (default = "()") </param>
         /// <param name="separator">List item separator (default = ,)</param>

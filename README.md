@@ -4,8 +4,7 @@
 
 Construct, ready to run,  Parsers of any complexity using a declarative fluent syntax in C#. The system is lightweight, fast, and loosely coupled components provide complete implementation flexibility.
 
-**Note:** This repo only contains documentation and examples of Flow Expressions. 
-The actual implementation is in the [Script-Utils](https://github.com/PromicSW/script-utils) library which also contains advanced *scanners* and other utilities.
+**Note:** This repo uses high performance scanners from the [Scanners](https://github.com/PromicSW/scanners) repo/library.
 
 ## Building Flow Expressions
 
@@ -18,7 +17,7 @@ For starters only **Parsers** will be discussed in this document!
 >
 > For a Parser, the context would be a **Scanner** that manages text scanning and provides <i>Tokens</i> to operate on.<br/> 
 >
-> A comprehensive [FexScanner]((Docs/FexScannerExt.md)) is provided but you can roll your own if required. 
+> A comprehensive [FexScanner]((Docs/FexScannerExt.md)) is provided (derived from *ScriptScanner* in the [Scanners](https://github.com/PromicSW/scanners) repo/library) but you can roll your own if required. 
 
 The following example is a complete **Expression Parser**, including evaluation and error reporting:
 
@@ -89,13 +88,9 @@ Parse error: Primary expected
 
 Available via Nuget
 
-> **Note:** Flow Expressions are actually implemented in the [Script-Utils](https://github.com/PromicSW/script-utils) library and are only documented with examples in this repo.
-
 Below is a basic console application that defines and runs a Flow Expression to parse a fictitious telephone number:
 ```csharp
-using Psw.ScriptUtils;
-using Psw.ScriptUtils.FlowExpressions;
-using Psw.ScriptUtils.Scanners;
+using Psw.FlowExpressions;
 
 QuickStart();
 
