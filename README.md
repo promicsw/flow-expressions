@@ -80,7 +80,7 @@ Example error reporting for the expression parser above:
 ```dos
 Expression Error:
 9 - ( 5.5 ++ 3 ) * 6 - 4 / ( 9 - 1 )
------------^ (ln:1 Ch:12)
+-----------^ (Ln:1 Ch:12)
 Parse error: Primary expected
 ```
 
