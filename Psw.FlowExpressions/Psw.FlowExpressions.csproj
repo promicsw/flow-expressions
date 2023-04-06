@@ -12,11 +12,15 @@
     <Copyright>2023 Promic Software</Copyright>
     <PackageProjectUrl>https://github.com/promicsw/flow-expressions</PackageProjectUrl>
     <RepositoryUrl>https://github.com/promicsw/flow-expressions</RepositoryUrl>
-    <PackageTags>parser</PackageTags>
+    <PackageTags>parser;c#;</PackageTags>
     <PackageReleaseNotes>Initial release</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="FexParser.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Psw.Scanners" Version="1.0.0" />

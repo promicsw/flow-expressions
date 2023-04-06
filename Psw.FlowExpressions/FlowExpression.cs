@@ -11,7 +11,7 @@ namespace Psw.FlowExpressions
     public class FexNoContext { }
 
     /// <summary>
-    /// Build and return FexExlements that operate on a context T and can be used in 
+    /// Build and return FexElements that operate on a context T and can be used in 
     /// other productions or as the Axiom (root) to be run.<br/>
     /// - The innards of each element are built via the encapsulated FexBuilder class
     /// </summary>

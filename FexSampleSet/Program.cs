@@ -104,10 +104,9 @@ void QuickStart() {
     var scn = new FexScanner(testNumber);  // Scanner instance
 
     // Run the Axiom and output results:
-    if (tnumber.Run(scn))
-        Console.WriteLine($"TNumber OK: ({dcode}) {acode}-{number}");     // Passed: Display result
-    else
-        Console.WriteLine(scn.ErrorLog.AsConsoleError("TNumber Error:")); // Failed: Display formatted error
+    Console.WriteLine(tnumber.Run(scn)
+        ? $"TNumber OK: ({dcode}) {acode}-{number}"       // Passed: Display result
+        : scn.ErrorLog.AsConsoleError("TNumber Error:")); // Failed: Display formatted error
 
 }
 
@@ -152,7 +151,7 @@ void ExpressionEval() {
 
     Console.WriteLine($"Evaluating expression: {expr1}");
 
-    var fex = new FexParser(expr1); // Use the FexParser convenience class for parser construction 
+    var fex = new FlowExpression<FexScanner>();  
 
     var expr = fex.Seq(s => s
         .Ref("factor")
@@ -184,7 +183,11 @@ void ExpressionEval() {
 
     var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
-    Console.WriteLine(fex.Run(exprEval, () => $"Passed = {numStack.Pop():F4}", e => e.AsConsoleError("Expression Error:")));
+    var scn = new FexScanner(expr1);
+
+    Console.WriteLine(exprEval.Run(scn) 
+        ? $"Passed = {numStack.Pop():F4}" 
+        : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
 
 // Expression Evaluation REPL
