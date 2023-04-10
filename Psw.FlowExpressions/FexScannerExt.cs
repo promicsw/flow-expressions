@@ -417,15 +417,6 @@ namespace Psw.FlowExpressions
         public static FexBuilder<T> ScanBlock<T>(this FexBuilder<T> exp, string blockDelims = "{}", bool isOpen = false) where T : FexScanner
             => exp.Op(c => c.ScanBlock(blockDelims, isOpen));
 
-        /// <summary>
-        /// Scan a block delimited by blockStart and blockEnd strings (E.g "[%" and "%]" etc.)<br /> 
-        /// - Index must currently be at blockStart<br/>
-        /// - The first occurrence of blockEnd terminates the scan<br/>
-        /// - Token contains the block content excluding the block delimiters.
-        /// </summary>
-        /// <returns>True for a valid block (Index positioned after block) else false and Logs an error (Index unchanged)</returns>
-        public static FexBuilder<T> ScanRawBlock<T>(this FexBuilder<T> exp, string blockStart, string blockEnd) where T : FexScanner
-            => exp.Op(c => c.ScanRawBlock(blockStart, blockEnd));
 
         /// <summary>
         /// Scan a List of the form: ( item1, item 2 ... )<br/>
