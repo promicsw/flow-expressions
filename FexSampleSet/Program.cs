@@ -53,10 +53,10 @@ void RunSamplesFex() {
         new Sample("Expression REPL", () => ExpressionREPL()),
     };
 
-    var fex = new FlowExpression<FexNoContext>();
     string val = "";
 
-    fex.Rep0N(r => r
+    new FlowExpression<FexNoContext>()
+        .Rep0N(r => r
         .Act(c => Console.WriteLine("Run Sample:"))
         .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
         .Act(c => Console.Write("  Blank to Exit\r\n> "))
@@ -72,6 +72,25 @@ void RunSamplesFex() {
             }
         })
     ).Run(new FexNoContext());
+
+    //var fex = new FlowExpression<FexNoContext>();
+
+    //fex.Rep0N(r => r
+    //    .Act(c => Console.WriteLine("Run Sample:"))
+    //    .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
+    //    .Act(c => Console.Write("  Blank to Exit\r\n> "))
+    //    .Op(o => !string.IsNullOrEmpty(val = Console.ReadLine()))
+    //    .Act(c => {
+    //        Console.Clear();
+    //        if (int.TryParse(val, out int m)) {
+    //            if (m > 0 && m <= samples.Count) {
+    //                Console.WriteLine($"Run: {samples[m - 1].Name}");
+    //                samples[m - 1].Run();
+    //                Console.WriteLine();
+    //            }
+    //        }
+    //    })
+    //).Run(new FexNoContext());
 
 }
 

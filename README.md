@@ -1,10 +1,12 @@
-
-
-# Flow Expressions
+# Flow Expressions 
+[![Nuget](https://img.shields.io/nuget/v/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)
+[![Nuget](https://img.shields.io/nuget/dt/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)
+[![Nuget](https://img.shields.io/nuget/v/SoftCircuits.Silk)](https://www.nuget.org/packages/SoftCircuits.Silk/)
 
 Construct, ready to run,  Parsers of any complexity using a declarative fluent syntax in C#. The system is lightweight, fast, and loosely coupled components provide complete implementation flexibility.
 
 **Note:** This repo uses high performance scanners from the [Scanners](https://github.com/PromicSW/scanners) repo/library.
+
 
 ## Building Flow Expressions
 
@@ -217,12 +219,12 @@ void RunSamplesFex() {
         new Sample("Expression REPL", () => ExpressionREPL()),
     };
 
-    // FexNoContext is just an empty class since 
-    // we don't need an actual context for this!
-    var fex = new FlowExpression<FexNoContext>();
     string val = "";
 
-    fex.Rep0N(r => r
+    // FexNoContext is just an empty class since 
+    // we don't need an actual context for this!
+    new FlowExpression<FexNoContext>();
+        .Rep0N(r => r
         .Act(c => Console.WriteLine("Run Sample:"))
         .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
         .Act(c => Console.Write("  Blank to Exit\r\n> "))
