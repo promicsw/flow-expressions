@@ -13,7 +13,8 @@ void RunSamples() {
 
     var samples = new List<Sample> {
         new Sample("Quick Start", () => QuickStart()),
-        new Sample("Use Simple Scanner", () => DemoSimpleScanner()),
+        new Sample("Simple Scanner (valid)", () => SSDemo.DemoSimpleScanner2(" N3 N1N2-abc")),
+        new Sample("Simple Scanner (invalid)", () => SSDemo.DemoSimpleScanner2(" N3 N1N2-ac")),
         new Sample("Expression Eval", () => ExpressionEval()),
         new Sample("Expression REPL", () => ExpressionREPL()),
     };
@@ -48,7 +49,9 @@ void RunSamplesFex() {
 
     var samples = new List<Sample> {
         new Sample("Quick Start", () => QuickStart()),
-        new Sample("Use Simple Scanner", () => DemoSimpleScanner()),
+        new Sample("Simple Scanner 1", () => SSDemo.DemoSimpleScanner1()),
+        new Sample("Simple Scanner 2 (valid)", () => SSDemo.DemoSimpleScanner2(" N3 N1N3-abc")),
+        new Sample("Simple Scanner 2 (invalid)", () => SSDemo.DemoSimpleScanner2(" N3 N1N2-ac")),
         new Sample("Expression Eval", () => ExpressionEval()),
         new Sample("Expression REPL", () => ExpressionREPL()),
     };
@@ -98,11 +101,13 @@ void RunSamplesFex() {
 void QuickStart() {
     /* Parse demo telephone number of the form:
      *   (dialing_code) area_code-number: E.g (011) 734-9571
-     *     - dialing code: 3 or more digits enclosed in (..)
-     *     - Followed by optional spaces
-     *     - area_code: 3 digits
-     *     - Single space or -
-     *     - number: 4 digits
+     *   
+     *   Grammar: '(' (digit)3+ ')' space* (digit)3 (space | '-') (digit)4
+     *   - dialing code: 3 or more digits enclosed in (..)
+     *   - Followed by optional spaces
+     *   - area_code: 3 digits
+     *   - Single space or -
+     *   - number: 4 digits
      */
 
     var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner

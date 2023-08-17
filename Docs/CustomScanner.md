@@ -7,11 +7,12 @@ This tutorial describes how to construct a custom Scanner for use with Flow Expr
 The simple Scanner below takes a source string and then provides a few scanning services:
 
 ```csharp
-public class SimpleScanner {
+public class SimpleScanner
+{
     private string _source;
-    public char Delim { get; private set; } // Last Delimiter logged
-    private int _index = 0;                 // Current scan position
-    protected static char _Eos = '0';       // End of source character
+    public char Delim { get; private set; }  // Last Delimiter logged
+    private int _index = 0;                  // Scan pointer / index
+    protected static char _Eos = '0';        // End of source character
 
     public SimpleScanner(string source) => _source = source;
 
@@ -28,7 +29,8 @@ public class SimpleScanner {
         return false;
     }
 
-    // Return true if char at index matches chars, log char in Delim and advance index
+    // Return true if char at index matches any of the chars and advance index
+    // Also log the char matched in Delim for later access
     // Else return false and index unchanged
     public bool IsAnyCh(string chars) {
         if (!chars.Contains(PeekCh())) return false;
@@ -38,7 +40,7 @@ public class SimpleScanner {
     }
 
     // Skip spaces
-    public void SkipSp() { while (IsCh(' ')); }
+    public void SkipSp() { while (IsCh(' ')) ; }
 
     // Build and error message string showing error position
     public string ErrorMsg(string msg)
@@ -53,10 +55,12 @@ public static void DemoSimpleScanner1() {
     var scn = new SimpleScanner(" N3 N1N2-abc");
     var fex = new FlowExpression<SimpleScanner>();
 
+    // Grammar: (space* 'N' ('1' | '2' | '3'))+ '-' 'ab'? 'c'
+
     var validNumber = fex.Seq(s => s
         .Op(c => c.IsAnyCh("123"))
         .OnFail(c => Console.WriteLine(c.ErrorMsg("1 2 or 3 expected")))
-        .Act(c => Console.WriteLine($"Number = {c.Delim}"))
+        .Act(c => Console.WriteLine($"N value = N{c.Delim}"))
     );
 
     var after = fex.Seq(s => s
@@ -66,36 +70,44 @@ public static void DemoSimpleScanner1() {
 
     var startRep = fex.Rep1N(r => r.Op(c => c.IsCh('N')).PreOp(p => p.SkipSp()).Fex(validNumber));
 
-    var test = fex.Seq(s => s.Fex(startRep).Op(c => c.IsCh('-')).Fex(after));
+    var axiom = fex.Seq(s => s.Fex(startRep).Op(c => c.IsCh('-')).Fex(after));
 
-    if (test.Run(scn)) Console.WriteLine("Passed");
+    if (axiom.Run(scn)) Console.WriteLine("Passed");
     else Console.WriteLine("Failed");
 }
 ```
 
 ## Context Operator Extensions
-One can extend FexBuilder with operators (Op) specific to the context:
+One can extend FexBuilder with operators (Op) bound to the context:
 - FexBuilder\<T> (where T is the context) implements the *fluid* API for building flow expressions.
-- The few extension below can be defined for our SimpleScanner.
+- The few operator extension below can be defined for our SimpleScanner.
 - We can also defined extensions for *OnFail* and *Fail* to simplify things.
 
 ```csharp
-public static class FexSimpleScannerExt {
-
-    public static FexBuilder<T> Ch<T>(this FexBuilder<T> exp, char ch) where T : SimpleScanner 
+public static class FexSimpleScannerExt
+{
+    // Operator extension bound to scanner.IsCh(...)
+    public static FexBuilder<T> Ch<T>(this FexBuilder<T> exp, char ch) where T : SimpleScanner
         => exp.Op(c => c.IsCh(ch));
 
-    // Operator extension that records a value
-    // Check for a char match and provide a valueAction Delegate on the value
+    // Operator extension bound to scanner.IsAnyCh(...):
+    // - IsAnyCh records the char found in scanner.Delim:
+    //   - So we record this value in the Op for access via ActValue<T>(Action<T> valueAction)
+    //   - Or, as below, we can directly provide an Action<char> delegate to operate on the value.
+    //     E.g. AnyCh("123", c => Console.WriteLine($"Number = {c}"))
+    //          rather than: AnyCh("123").ActValue<char>(c => Console.WriteLine($"Number = {c}"))
     public static FexBuilder<T> AnyCh<T>(this FexBuilder<T> exp, string matchChars, Action<char> valueAction = null) where T : SimpleScanner
-        => exp.Op((c, v) => v.SetValue(c.IsAnyCh(matchChars), c.Delim)).Value(valueAction);
+        => exp.Op((c, v) => v.SetValue(c.IsAnyCh(matchChars), c.Delim)).ActValue(valueAction);
 
-    public static FexBuilder<T> Sp<T>(this FexBuilder<T> exp) where T : SimpleScanner 
+    // Operator extension to skip spaces without ever failing.
+    public static FexBuilder<T> Sp<T>(this FexBuilder<T> exp) where T : SimpleScanner
         => exp.Op(c => { c.SkipSp(); return true; });
-    
+
+    // Override OnFail to produce console output
     public static FexBuilder<T> OnFail<T>(this FexBuilder<T> exp, string errorMsg) where T : SimpleScanner
         => exp.OnFail(c => Console.WriteLine(c.ErrorMsg(errorMsg)));
 
+    // Override Fail to produce console output
     public static FexBuilder<T> Fail<T>(this FexBuilder<T> exp, string errorMsg) where T : SimpleScanner
         => exp.Fail(c => Console.WriteLine(c.ErrorMsg(errorMsg)));
 }
@@ -104,25 +116,30 @@ public static class FexSimpleScannerExt {
 And now it may be used as follows (which is much easier to read and work with)
 
 ```csharp
-public static void DemoSimpleScanner2() {
-    var scn = new SimpleScanner(" N3 N1N2-abc");
+public static void DemoSimpleScanner2(string source = " N3 N1N2-abc") {
+
+    // Grammar: (space* 'N' ('1' | '2' | '3'))+ '-' 'ab'? 'c'
+
+    Console.WriteLine($"Source = \"{source}\"");
+
+    var scn = new SimpleScanner(source);
     var fex = new FlowExpression<SimpleScanner>();
 
     var validNumber = fex.Seq(s => s
-        .AnyCh("123", v => Console.WriteLine($"Number = {v}"))
+        .AnyCh("123", v => Console.WriteLine($"N value = N{v}"))
         .OnFail("1, 2 or 3 expected")
     );
 
     var after = fex.Seq(s => s
-        .Opt(o => o.Ch('a').Ch('b').OnFail("b expected"))
+        .Opt(o => o.Ch('a').Ch('b').OnFail("b expected")) // If we have a then b must follow
         .Ch('c').OnFail("c expected")
     );
 
     var startRep = fex.Rep1N(r => r.Ch('N').PreOp(p => p.SkipSp()).Fex(validNumber));
 
-    var test = fex.Seq(s => s.Fex(startRep).Ch('-').Fex(after));
+    var axiom = fex.Seq(s => s.Fex(startRep).Ch('-').Fex(after));
 
-    if (test.Run(scn)) Console.WriteLine("Passed");
+    if (axiom.Run(scn)) Console.WriteLine("Passed");
     else Console.WriteLine("Failed");
 }
 ```
