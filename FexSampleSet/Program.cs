@@ -248,7 +248,7 @@ void ExpressionREPL() {
 
     var primary = fex.Seq(s => s.RefName("primary")
         .OneOf(o => o
-            .Seq(e => e.Ch('(').Ref("expr").Ch(')').OnFail(") expected"))
+            .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
             .Seq(s => s.Ch('a').Act(c => numStack.Push(ans)))  // a is previous answer
          ));
@@ -260,6 +260,7 @@ void ExpressionREPL() {
             Console.Write("> ");
             var line = Console.ReadLine();
             if (string.IsNullOrEmpty(line)) return false;
+            //Console.WriteLine($"Line:{line}");
             c.SetSource(line);
 
             if (exprEval.Run(scn)) {

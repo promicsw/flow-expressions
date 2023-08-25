@@ -432,9 +432,11 @@ A PreOp is efficient as it will execute only once while trying several *lookahea
 |`GlobalPreOp(Action<Ctx> preOp)`|Global setting to automatically attach to all operators.|
 |`PreOp(Action<Ctx> preOp)`| Use directly after an operator to attach/override a PreOp|
 
-See the Expression example which uses a SetPreOp to skip all spaces before the *tokens*
+See the Expression example which uses a GlobalPreOp to skip all spaces before the *tokens*
 
-> **Note** The preOp action may be null if no PreOp should be executed.
+> **Notes:** 
+> - The preOp action may be null if no PreOp should be executed.
+> - The above mechanism could then be used to *switch off* the GlobalPreOp for selected Op's.
 
 [(toc)](#id-toc)
 

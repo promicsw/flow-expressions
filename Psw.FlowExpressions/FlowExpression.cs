@@ -49,7 +49,7 @@ namespace Psw.FlowExpressions
         /// <summary>
         /// Define an optional set of sequences where one of them may pass
         /// </summary>
-        public FexElement<T> OptOneOf(Action<FexBuilder<T>> buildFex) => Opt(o => OneOf(buildFex));
+        public FexElement<T> OptOneOf(Action<FexBuilder<T>> buildFex) => Opt(o => o.OneOf(buildFex));
 
         /// <summary>
         /// Inverse of OneOf, where it fails if any sequence passes<br />
@@ -83,6 +83,6 @@ namespace Psw.FlowExpressions
         /// <summary>
         /// Repeat a OneOf construct repMin up to repMax times (-1 for any reps > repMin) (see documentation for details)
         /// </summary>
-        public FexElement<T> RepOneOf(int repMin, int repMax, Action<FexBuilder<T>> buildFex) => Rep(repMin, repMax, r => OneOf(buildFex));
+        public FexElement<T> RepOneOf(int repMin, int repMax, Action<FexBuilder<T>> buildFex) => Rep(repMin, repMax, r => r.OneOf(buildFex));
     }
 }

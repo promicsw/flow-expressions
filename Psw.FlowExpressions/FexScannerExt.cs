@@ -116,7 +116,7 @@ namespace Psw.FlowExpressions
         /// <param name="comp">Comparison type (default = StringComparison.InvariantCultureIgnoreCase)</param>
         /// <returns>True and matching string is logged as a Value, else false</returns>
         public static FexBuilder<T> IsAnyString<T>(this FexBuilder<T> exp, IEnumerable<string> matchStrings, bool advanceIndex = true, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
-            => exp.Op((c, v) => v.SetValue(c.IsAnyString(matchStrings, advanceIndex, comp), c.Token));
+            => exp.Op((c, v) => v.SetValue(c.IsAnyString(matchStrings, advanceIndex, comp), c.Match));
 
         /// <summary>
         /// Check if text at Index equals any string in matchString and optionally advance Index if it matches.<br/>
@@ -126,7 +126,7 @@ namespace Psw.FlowExpressions
         /// <param name="comp">Comparison type (default = StringComparison.InvariantCultureIgnoreCase)</param>
         /// <returns>True and matching string is logged as a Value, else false</returns>
         public static FexBuilder<T> IsAnyString<T>(this FexBuilder<T> exp, string matchStrings, bool advanceIndex = true, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
-            => exp.Op((c, v) => v.SetValue(c.IsAnyString(matchStrings, advanceIndex, comp), c.Token));
+            => exp.Op((c, v) => v.SetValue(c.IsAnyString(matchStrings, advanceIndex, comp), c.Match));
 
         // Skip Operations ====================================================
 
@@ -195,7 +195,7 @@ namespace Psw.FlowExpressions
         ///   False: Not found or Eos. Index unchanged
         /// </returns>
         public static FexBuilder<T> SkipToAnyStr<T>(this FexBuilder<T> exp, IEnumerable<string> matchStrings, bool skipOver = false, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
-            => exp.Op((c, v) => v.SetValue(c.SkipToAnyStr(matchStrings, skipOver, comp), c.Token));
+            => exp.Op((c, v) => v.SetValue(c.SkipToAnyStr(matchStrings, skipOver, comp), c.Match));
 
         /// <summary>
         /// Skip up to first occurrence of any string in delimited matchStrings and optionally skip over the matching string.<br/>
@@ -209,7 +209,7 @@ namespace Psw.FlowExpressions
         ///   False: Not found or Eos. Index unchanged
         /// </returns>
         public static FexBuilder<T> SkipToAnyStr<T>(this FexBuilder<T> exp, string matchStrings, bool skipOver = false, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
-            => exp.Op((c, v) => v.SetValue(c.SkipToAnyStr(matchStrings, skipOver, comp), c.Token));
+            => exp.Op((c, v) => v.SetValue(c.SkipToAnyStr(matchStrings, skipOver, comp), c.Match));
 
         /// <summary>
         /// Skip to Eol or Eos (last line)<br/>
