@@ -26,7 +26,6 @@ namespace Psw.FlowExpressions
     ///     => exp.Op(o => o.IsCh(ch)); // IsCh is a FexScanner method
     /// ```
     /// <br/>
-
     /// 
     /// **Extensions Reference:**
     /// </mdoc>
