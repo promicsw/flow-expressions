@@ -1,12 +1,12 @@
 # Flow Expressions 
-[![Nuget](https://img.shields.io/nuget/v/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)
-[![Nuget](https://img.shields.io/nuget/dt/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)
-[![Nuget](https://img.shields.io/nuget/v/SoftCircuits.Silk)](https://www.nuget.org/packages/SoftCircuits.Silk/)
+
 
 Construct, ready to run,  Parsers of any complexity using a declarative fluent syntax in C#. The system is lightweight, fast, and loosely coupled components provide complete implementation flexibility.
 
 **Note:** This repo uses high performance scanners from the [Scanners](https://github.com/PromicSW/scanners) repo/library.
 
+[![Nuget](https://img.shields.io/nuget/v/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)
+<!--[![Nuget](https://img.shields.io/nuget/dt/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)-->
 
 ## Building Flow Expressions
 
@@ -24,23 +24,22 @@ For starters only **Parsers** will be discussed in this document!
 The following example is a complete **Expression Parser**, including evaluation and error reporting:
 
 ```csharp
-public static void ExpressionEval() {
+void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
+{
     /*
      * Expression Grammar:
-     * expression     => factor ( ( '-' | '+' ) factor )* ;
-     * factor         => unary ( ( '/' | '*' ) unary )* ;
-     * unary          => '-' unary | primary ;
-     * primary        => NUMBER | "(" expression ")" ;
+     * expression => factor ( ( '-' | '+' ) factor )* ;
+     * factor     => unary ( ( '/' | '*' ) unary )* ;
+     * unary      => ( '-'  unary ) | primary ;
+     * primary    => NUMBER | "(" expression ")" ;
     */
 
-    // Number Stack for calculations
+    // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
 
-    var expr1 = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )";
+    Console.WriteLine($"Calculate: {calc}");
 
-    Console.WriteLine($"Evaluating expression: {expr1}");
-
-    var fex = new FlowExpression<FexScanner>();
+    var fex = new FlowExpression<FexScanner>();  
 
     var expr = fex.Seq(s => s
         .Ref("factor")
@@ -49,33 +48,33 @@ public static void ExpressionEval() {
             .Seq(s => s.Ch('-').Ref("factor").Act(c => numStack.Push(-numStack.Pop() + numStack.Pop())))
          ));
 
-    fex.Seq(s => s.RefName("factor")
+    var factor = fex.Seq(s => s.RefName("factor")
         .Ref("unary")
         .RepOneOf(0, -1, r => r
             .Seq(s => s.Ch('*').Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
             .Seq(s => s.Ch('/').Ref("unary")
                        .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0
-                       .Act(c => numStack.Push(1/numStack.Pop() * numStack.Pop())))
+                       .Act(c => numStack.Push(1 / numStack.Pop() * numStack.Pop())))
          ));
 
-    fex.Seq(s => s.RefName("unary")
+    var unary = fex.Seq(s => s.RefName("unary")
         .OneOf(o => o
             .Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
             .Ref("primary")
-         ).OnFail("Primary expected"));
+         ));
 
-    fex.Seq(s => s.RefName("primary")
+    var primary = fex.Seq(s => s.RefName("primary")
         .OneOf(o => o
             .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
-         ));
+         ).OnFail("Primary expected"));
 
     var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
-    var scn = new FexScanner(expr1);
+    var scn = new FexScanner(calc);
 
     Console.WriteLine(exprEval.Run(scn) 
-        ? $"Passed = {numStack.Pop():F4}" 
+        ? $"Answer = {numStack.Pop():F4}" 
         : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
 ```
@@ -91,7 +90,7 @@ Parse error: Primary expected
 
 ## Quick Start
 
-Available via Nuget
+[![Nuget](https://img.shields.io/nuget/v/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)
 
 Below is a basic console application that defines and runs a Flow Expression to parse a fictitious telephone number:
 ```csharp
@@ -99,23 +98,26 @@ using Psw.FlowExpressions;
 
 QuickStart();
 
-void QuickStart() {
+void QuickStart() 
+{
     /* Parse demo telephone number of the form:
      *   (dialing_code) area_code-number: E.g (011) 734-9571
-     *     - dialing code: 3 or more digits enclosed in (..)
-     *     - Followed by optional spaces
-     *     - area_code: 3 digits
-     *     - Single space or -
-     *     - number: 4 digits
+     *   
+     *   Grammar: '(' (digit)3+ ')' space* (digit)3 (space | '-') (digit)4
+     *   - dialing code: 3 or more digits enclosed in (..)
+     *   - Followed by optional spaces
+     *   - area_code: 3 digits
+     *   - Single space or -
+     *   - number: 4 digits
      */
 
-    var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner
-    string dcode = "", acode = "", number = "";  // Will record the values in here
+    var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner.
+    string dcode = "", acode = "", number = "";  // Will record values in here.
 
     // Build the flow expression with 'Axiom' tnumber:
     var tnumber = fex.Seq(s => s
         .Ch('(').OnFail("( expected")
-        .Rep(3, -1, r => r.Digit(v => dcode += v)).OnFail("at least 3 digit dialing code expected")
+        .Rep(3, -1, r => r.Digit(v => dcode += v)).OnFail("3+ digit dialing code expected")
         .Ch(')').OnFail(") expected")
         .Sp()
         .Rep(3, r => r.Digit(v => acode += v)).OnFail("3 digit area code expected")
@@ -130,6 +132,7 @@ void QuickStart() {
     Console.WriteLine(tnumber.Run(scn)
         ? $"TNumber OK: ({dcode}) {acode}-{number}"       // Passed: Display result
         : scn.ErrorLog.AsConsoleError("TNumber Error:")); // Failed: Display formatted error
+
 }
 ```
 
@@ -142,7 +145,7 @@ void QuickStart() {
 
 Flow Expressions provide a novel mechanism of constructing parsers using a simple fluent syntax. 
 Having developed several programming languages and parsers in the past I came up with this idea as an experiment. 
-It turned out so well, and I find it far more intuitive than say Parser Combinators and PEG, that I decided to share it.
+It think it turned out very well, and I find it far more functional and intuitive than say *Parser Combinators* and *PEG*, that I decided to share it.
 
 > It actually makes parser construction quite fun as you can achieve a lot with a few lines of code, while the system does all the heavy lifting.
 >
@@ -151,7 +154,7 @@ It turned out so well, and I find it far more intuitive than say Parser Combinat
 Flow Expressions have since been used to create sophisticated parsers for various projects:
 - ElementScript
 - Markdown to Html parser
-- GenCodeDoc - extract and generate code reference documentation (some of reference material here was generated this way)
+- CShapCodeDoc - extract and generate code reference documentation (some of reference material here was generated this way)
 - Several others...
 
 > A potential future extension is to provide a *lookahead* mechanism - will see if there is any interest.
@@ -172,8 +175,8 @@ Run Sample:
 The REPL menu via conventional coding below:
 
 ```csharp
-void RunSamples() {
-
+void RunSamples() 
+{
     var samples = new List<Sample> {
         new Sample("Quick Start", () => QuickStart()),
         new Sample("Use Simple Scanner", () => DemoSimpleScanner()),
@@ -210,8 +213,8 @@ void RunSamples() {
 An equivalent REPL menu, via a Flow Expression, shows what's possible: 
 
 ```csharp
-void RunSamplesFex() {
-
+void RunSamplesFex() 
+{
     var samples = new List<Sample> {
         new Sample("Quick Start", () => QuickStart()),
         new Sample("Use Simple Scanner", () => DemoSimpleScanner()),
@@ -221,25 +224,23 @@ void RunSamplesFex() {
 
     string val = "";
 
-    // FexNoContext is just an empty class since 
-    // we don't need an actual context for this!
-    new FlowExpression<FexNoContext>();
+    // FexNoContext is just an empty class since we don't do any scanning here.
+    new FlowExpression<FexNoContext>()
         .Rep0N(r => r
-        .Act(c => Console.WriteLine("Run Sample:"))
-        .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
-        .Act(c => Console.Write("  Blank to Exit\r\n> "))
-        .Op(o => !string.IsNullOrEmpty(val = Console.ReadLine()))
-        .Act(c => {
-            Console.Clear();
-            if (int.TryParse(val, out int m)) {
-                if (m > 0 && m <= samples.Count) {
-                    Console.WriteLine($"Run: {samples[m - 1].Name}");
-                    samples[m - 1].Run();
-                    Console.WriteLine();
+            .Act(c => Console.WriteLine("Run Sample:"))
+            .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
+            .Act(c => Console.Write("  Blank to Exit\r\n> "))
+            .Op(o => !string.IsNullOrEmpty(val = Console.ReadLine()))
+            .Act(c => {
+                Console.Clear();
+                if (int.TryParse(val, out int m)) {
+                    if (m > 0 && m <= samples.Count) {
+                        Console.WriteLine($"Run: {samples[m - 1].Name}");
+                        samples[m - 1].Run();
+                        Console.WriteLine();
+                    }
                 }
-            }
-        })
-    ).Run(new FexNoContext());
-
+            })
+        ).Run(new FexNoContext());
 }
 ```

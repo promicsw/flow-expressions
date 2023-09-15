@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Psw.Scanners" Version="1.0.1" />
+    <PackageReference Include="Psw.Scanners" Version="1.0.3" />
   </ItemGroup>
 
 </Project>

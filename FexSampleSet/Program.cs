@@ -8,6 +8,9 @@ using Psw.FlowExpressions;
 
 RunSamplesFex();
 
+//ExpressionEval();
+//ExpressionEval("5");
+
 
 void RunSamples() {
 
@@ -58,43 +61,24 @@ void RunSamplesFex() {
 
     string val = "";
 
+    // FexNoContext is just an empty class since we don't do any scanning here.
     new FlowExpression<FexNoContext>()
         .Rep0N(r => r
-        .Act(c => Console.WriteLine("Run Sample:"))
-        .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
-        .Act(c => Console.Write("  Blank to Exit\r\n> "))
-        .Op(o => !string.IsNullOrEmpty(val = Console.ReadLine()))
-        .Act(c => {
-            Console.Clear();
-            if (int.TryParse(val, out int m)) {
-                if (m > 0 && m <= samples.Count) {
-                    Console.WriteLine($"Run: {samples[m - 1].Name}");
-                    samples[m - 1].Run();
-                    Console.WriteLine();
+            .Act(c => Console.WriteLine("Run Sample:"))
+            .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
+            .Act(c => Console.Write("  Blank to Exit\r\n> "))
+            .Op(o => !string.IsNullOrEmpty(val = Console.ReadLine()))
+            .Act(c => {
+                Console.Clear();
+                if (int.TryParse(val, out int m)) {
+                    if (m > 0 && m <= samples.Count) {
+                        Console.WriteLine($"Run: {samples[m - 1].Name}");
+                        samples[m - 1].Run();
+                        Console.WriteLine();
+                    }
                 }
-            }
-        })
-    ).Run(new FexNoContext());
-
-    //var fex = new FlowExpression<FexNoContext>();
-
-    //fex.Rep0N(r => r
-    //    .Act(c => Console.WriteLine("Run Sample:"))
-    //    .RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
-    //    .Act(c => Console.Write("  Blank to Exit\r\n> "))
-    //    .Op(o => !string.IsNullOrEmpty(val = Console.ReadLine()))
-    //    .Act(c => {
-    //        Console.Clear();
-    //        if (int.TryParse(val, out int m)) {
-    //            if (m > 0 && m <= samples.Count) {
-    //                Console.WriteLine($"Run: {samples[m - 1].Name}");
-    //                samples[m - 1].Run();
-    //                Console.WriteLine();
-    //            }
-    //        }
-    //    })
-    //).Run(new FexNoContext());
-
+            })
+        ).Run(new FexNoContext());
 }
 
 // QuickStart sample 
@@ -110,13 +94,13 @@ void QuickStart() {
      *   - number: 4 digits
      */
 
-    var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner
-    string dcode = "", acode = "", number = "";  // Will record the values in here
+    var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner.
+    string dcode = "", acode = "", number = "";  // Will record values in here.
 
     // Build the flow expression with 'Axiom' tnumber:
     var tnumber = fex.Seq(s => s
         .Ch('(').OnFail("( expected")
-        .Rep(3, -1, r => r.Digit(v => dcode += v)).OnFail("at least 3 digit dialing code expected")
+        .Rep(3, -1, r => r.Digit(v => dcode += v)).OnFail("3+ digit dialing code expected")
         .Ch(')').OnFail(") expected")
         .Sp()
         .Rep(3, r => r.Digit(v => acode += v)).OnFail("3 digit area code expected")
@@ -158,22 +142,20 @@ void DemoSimpleScanner() {
 }
 
 // Expression Evaluation - using FexParser
-void ExpressionEval() {
+void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
 
     /*
      * Expression Grammar:
-     * expression     => factor ( ( '-' | '+' ) factor )* ;
-     * factor         => unary ( ( '/' | '*' ) unary )* ;
-     * unary          => ( '-' ) unary | primary ;
-     * primary        => NUMBER | "(" expression ")" ;
+     * expression => factor ( ( '-' | '+' ) factor )* ;
+     * factor     => unary ( ( '/' | '*' ) unary )* ;
+     * unary      => ( '-'  unary ) | primary ;
+     * primary    => NUMBER | "(" expression ")" ;
     */
 
-    // Number Stack for calculations
+    // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
 
-    var expr1 = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )";
-
-    Console.WriteLine($"Evaluating expression: {expr1}");
+    Console.WriteLine($"Calculate: {calc}");
 
     var fex = new FlowExpression<FexScanner>();  
 
@@ -197,20 +179,20 @@ void ExpressionEval() {
         .OneOf(o => o
             .Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
             .Ref("primary")
-         ).OnFail("Primary expected"));
+         ));
 
     var primary = fex.Seq(s => s.RefName("primary")
         .OneOf(o => o
             .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
-         ));
+         ).OnFail("Primary expected"));
 
     var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
-    var scn = new FexScanner(expr1);
+    var scn = new FexScanner(calc);
 
     Console.WriteLine(exprEval.Run(scn) 
-        ? $"Passed = {numStack.Pop():F4}" 
+        ? $"Answer = {numStack.Pop():F4}" 
         : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
 
@@ -244,14 +226,14 @@ void ExpressionREPL() {
         .OneOf(o => o
             .Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
             .Ref("primary")
-         ).OnFail("Primary expected"));
+         ));
 
     var primary = fex.Seq(s => s.RefName("primary")
         .OneOf(o => o
             .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
             .Seq(s => s.NumDecimal(n => numStack.Push(n)))
             .Seq(s => s.Ch('a').Act(c => numStack.Push(ans)))  // a is previous answer
-         ));
+         ).OnFail("Primary expected"));
 
     var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
 
