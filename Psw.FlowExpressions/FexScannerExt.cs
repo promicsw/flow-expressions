@@ -93,9 +93,13 @@ namespace Psw.FlowExpressions
         public static FexBuilder<T> Ch<T>(this FexBuilder<T> exp, char ch) where T : FexScanner => exp.Op(o => o.IsCh(ch));
 
         /// <summary>
-        /// Check if character at Index is in matchChars and advance Index if it does:<br/>
-        /// - Optionally perform an action on the character, which is also logged as a Value.
+        /// Check if character at Index is one of the matchChars:<br/>
+        /// - Optionally perform an action on the character.
         /// </summary>
+        /// <returns>
+        /// True: if found, advances the Index and logs the char in Delim and Value.<br/>
+        /// False: if not found and Index is unchanged.
+        /// </returns>
         public static FexBuilder<T> AnyCh<T>(this FexBuilder<T> exp, string matchChars, Action<char>? valueAction = null) where T : FexScanner
             => exp.Op((c, v) => v.SetValue(c.IsAnyCh(matchChars), c.Delim)).ActValue(valueAction);
 
@@ -113,7 +117,7 @@ namespace Psw.FlowExpressions
         /// <param name="matchStrings">Enumerable set of strings.</param>
         /// <param name="advanceIndex">Advance Index to just after match (default) else not.</param>
         /// <param name="comp">Comparison type (default = StringComparison.InvariantCultureIgnoreCase).</param>
-        /// <returns>True and matching string is logged as a Value, else false.</returns>
+        /// <returns>True and matching string is logged in Match and Value, else false.</returns>
         public static FexBuilder<T> IsAnyString<T>(this FexBuilder<T> exp, IEnumerable<string> matchStrings, bool advanceIndex = true, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
             => exp.Op((c, v) => v.SetValue(c.IsAnyString(matchStrings, advanceIndex, comp), c.Match));
 
@@ -123,9 +127,25 @@ namespace Psw.FlowExpressions
         /// <param name="matchStrings">Delimited strings and first character must be the delimiter (e.g. "|s1|s2|...").</param>
         /// <param name="advanceIndex">Advance Index to just after match (default) else not.</param>
         /// <param name="comp">Comparison type (default = StringComparison.InvariantCultureIgnoreCase)</param>
-        /// <returns>True and matching string is logged as a Value, else false.</returns>
+        /// <returns>True and matching string is logged in Match and Value, else false.</returns>
         public static FexBuilder<T> IsAnyString<T>(this FexBuilder<T> exp, string matchStrings, bool advanceIndex = true, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
             => exp.Op((c, v) => v.SetValue(c.IsAnyString(matchStrings, advanceIndex, comp), c.Match));
+
+        /// <summary>
+        /// Check if the last Delim matches delim (for methods that log a Delim).
+        /// </summary>
+        public static FexBuilder<T> IsDelim<T>(this FexBuilder<T> exp, char delim) where T : FexScanner
+           => exp.Op(c => c.Delim == delim);
+
+        /// <summary>
+        /// Check if the last Match matches matchString (for methods that log a Match).
+        /// </summary>
+        /// <param name="matchString">String to match.</param>
+        /// <param name="comp">Comparison type (default = StringComparison.InvariantCultureIgnoreCase).</param>
+        /// </summary>
+        public static FexBuilder<T> IsMatch<T>(this FexBuilder<T> exp, string matchString, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
+           => exp.Op(c => c.Match != null && c.Match.Equals(matchString, comp));
+
 
         // Skip Operations ====================================================
 
@@ -162,7 +182,7 @@ namespace Psw.FlowExpressions
             => exp.Op(c => c.SkipTo(termChar, skipOver));
 
         /// <summary>
-        /// Skip until any one of the termChars is found, which is logged as a Value:<br/>
+        /// Skip until any one of the termChars is found, which is logged in Delim and Value:<br/>
         /// - Optionally skip over the delimiter if skipOver is true.
         /// </summary>
         /// <returns>
@@ -184,13 +204,13 @@ namespace Psw.FlowExpressions
 
         /// <summary>
         /// Skip up to first occurrence of any string in matchStrings and optionally skip over the matching string:<br/>
-        /// - The matching string is logged as a Value.
+        /// - The matching string is logged in Match and Value.
         /// </summary>
         /// <param name="matchStrings">Enumerable set of strings.</param>
         /// <param name="skipOver">Advance Index to just after match (default = false) else not.</param>
         /// <param name="comp">Comparison type (default = StringComparison.InvariantCultureIgnoreCase).</param>
         /// <returns>
-        ///   True: Found and Index at start of matching text (logged as a Value) or just after if skipOver = true.<br/>
+        ///   True: Found and Index at start of matching text or just after if skipOver = true.<br/>
         ///   False: Not found or Eos. Index unchanged.
         /// </returns>
         public static FexBuilder<T> SkipToAnyStr<T>(this FexBuilder<T> exp, IEnumerable<string> matchStrings, bool skipOver = false, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
@@ -198,13 +218,13 @@ namespace Psw.FlowExpressions
 
         /// <summary>
         /// Skip up to first occurrence of any string in delimited matchStrings and optionally skip over the matching string:<br/>
-        /// - The matching string is logged as a Value.
+        /// - The matching string is logged in Match and Value.
         /// </summary>
         /// <param name="matchStrings">Delimited string and first character must be the delimiter (e.g. "|s1|s2|...").</param>
         /// <param name="skipOver">Advance Index to just after match (default = false) else not.</param>
         /// <param name="comp">Comparison type (default = StringComparison.InvariantCultureIgnoreCase).</param>
         /// <returns>
-        ///   True: Found and Index at start of matching text (logged as a Value) or just after if skipOver = true.<br/>
+        ///   True: Found and Index at start of matching text or just after if skipOver = true.<br/>
         ///   False: Not found or Eos. Index unchanged.
         /// </returns>
         public static FexBuilder<T> SkipToAnyStr<T>(this FexBuilder<T> exp, string matchStrings, bool skipOver = false, StringComparison comp = StringComparison.InvariantCultureIgnoreCase) where T : FexScanner
@@ -273,7 +293,7 @@ namespace Psw.FlowExpressions
         /// <summary>
         /// Scans up to any character in delims or to Eos (if orToEos it true):<br/>
         /// - Token contains the intermediate text (excluding delimiter).<br/>
-        /// - The terminating delimiter is logged as a value.
+        /// - The terminating delimiter is logged in Delim and Value.
         /// </summary>
         /// <returns>
         /// True: Delimiter found or orToEos is true. Index at delimiter or Eos.<br/>
@@ -297,7 +317,7 @@ namespace Psw.FlowExpressions
         /// <summary>
         /// Scan up to first occurrence of any string in matchStrings.<br/>
         /// - Token contains the intermediate text (excluding matching string)
-        /// - The matching string is logged as a value.
+        /// - The matching string is logged in Match and Value.
         /// </summary>
         /// <param name="matchStrings">Enumerable set of strings.</param>
         /// <param name="skipOver">Advance Index to just after match (default = false) else not.</param>
@@ -312,7 +332,7 @@ namespace Psw.FlowExpressions
         /// <summary>
         /// Scan up to first occurrence of any string in delimited matchStrings.<br/>
         /// - Token contains the intermediate text (excluding matching string).
-        /// - The matching string is logged as a value.
+        /// - The matching string is logged in Match and Value.
         /// </summary>
         /// <param name="matchStrings">Delimited string and first character must be the delimiter (e.g. "|s1|s2|...").</param>
         /// <param name="skipOver">Advance Index to just after match (default = false) else not.</param>

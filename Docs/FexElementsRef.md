@@ -29,9 +29,9 @@ public FexElement<T> Seq(Action<FexBuilder<T>> buildFex)
 |[`OptOneOf(o => o...)`*](#id-optoneof)| **Optional One Of:** Optionally perform a OneOf.|
 |[`NotOneOf(o => o...)`*](#id-notoneof)| **Not One Of:** Inverse of OneOf.|
 |[`BreakOn(o => o...)`](#id-notoneof)| **Alias for NotOneOf:** Reads better in loops.|
-|[`Rep(repMin, repMax, r => r...)`*](#id-rep)| **Repeat:** Repeated sequences.|
+|[`Rep(repMin, repMax, r => r...)*`<br/>`Rep(count, r => r...)*`<br/>`Rep0N(r => r...)*`<br/>`Rep1N(r => r...)`*](#id-rep)| **Repeat:** Repeated sequences.|
 |[`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof)| **Repeat One Of:** Repeated a OneOf expression.|
-|[`Fex(FlowExpr1, FlowExpr2, ...)`](#id-fex)| **Include Expressions:** Include a set of previously defined sub-expressions.|
+|[`Fex(FexElement1, FexElement2, ...)`](#id-fex)| **Include FexElements:** Include a set of previously defined FexElements.|
 |[`Act(Action<Ctx> action)`](#id-act)| **Action:** Perform any external Action based on the current state of the production.|
 |[`RepAct(int repeat, Action<Ctx, int> action)`](#id-repact)| **Repeat Action:** Perform any external repeated Action based on the current state of the production.|
 |[`OnFail(Action<Ctx> failAction)`](#id-onfail)| **Fail Action:**  Perform an Action if the last operator or production failed.|
@@ -45,12 +45,13 @@ public FexElement<T> Seq(Action<FexBuilder<T>> buildFex)
 
 ---
 <a id="id-seq"></a>
-### Sequence: `Seq(s => s...)`
-A Sequence defines a series of steps that must complete in full in order to pass. Sequences are the primary building blocks of flow expressions:
+### `Sequence: Seq(s => s...)`
+A Sequence defines a series of steps that must complete in full in order to pass. Sequences are the primary building structures of flow expressions:
 
-- A sequence may contain any compound (and nested) structure of elements including other sequences.
-- Several elements contain *inner-sequences* as their body.
-- Sequences always typically start with Operators, but may also start with Action(s).
+- A sequence consists of one or more FexElements.
+- All steps in a sequence must succeed for the sequence to pass.
+- *Action* FexElements don't affect the validity of a sequence.
+- Steps in the sequence may be optional (see Opt...) and these also don't affect the validity of a sequence.
 
 The following is a simple example of sequences.
 
@@ -62,13 +63,13 @@ Seq(s => s
     .Ch(')')
 );
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-op"></a>
-### Operator: `Op(Func<Ctx, bool> op)`
+### `Operator: Op(Func<Ctx, bool> op)`
 
-Op performs any operation on the Context (or *closure* environment) and returns a pass or failure result (true / false)
+Op performs any operation on the Context (or *closure* environment) and returns a success result.
 
 ```csharp
 // Op calls scanner method IsCh(...) which returns true/false
@@ -85,14 +86,14 @@ Op(c => {
     return true;
 })
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
-### Operator: `Op(Func<Ctx, FexOpValue, bool> op)`
+### `Operator: Op(Func<Ctx, FexOpValue, bool> op)`
 
-Use to define Op's that produce and record a value:
+Used to define Op's that produce and record a value:
 
-- Operates just like a normal Op but records a value via FexOpValue
-- This form is mainly used when defining see: Context Operator Extensions
+- Operates just like a normal Op but records a value via FexOpValue.
+- This form is mainly used when defining Context Operator Extensions.
 - FexOpValue is a helper utility for setting up a value:
   - Has a single method `bool SetValue(bool res, object value)` 
   - Set the value and returns true if res is true.
@@ -107,15 +108,15 @@ Op((c, v) => v.SetValue(c.IsAnyCh("+-"), c.Delim))
 // This would typically be followed by a Value Action element 
 .ActValue<char>(v => v...)
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-validop"></a>
-### Valid Operator: `ValidOp(Action<Ctx> action)`
+### `Valid Operator: ValidOp(Action<Ctx> action)`
 
-ValidOp performs any operation on the Context (or *closure* environment) and always returns a pass/true.
+ValidOp performs any operation on the Context (or *closure* environment) and always returns success.
 
-> Useful as the last element in a OneOf set to perform a default action if required.
+> Useful as the last element in a OneOf set to perform a default operation if required.<br/>
 > Equivalent to: `Op(c => { action(c); return true; })`
 
 ```csharp
@@ -127,11 +128,11 @@ OneOf(o => o
 );
 ```
 
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-value"></a>
-### Value Action: `ActValue<V>(Action<V> valueAction)`
+### `Value Action: ActValue<V>(Action<V> valueAction)`
 
 This binds an Action to an operator (Op) that recorded a value, and should follow directly after the Op:
 
@@ -148,15 +149,15 @@ Rep(3, r => r.Digit().ActValue<char>(v => acode += v))
 // Context Operator Extension configured to operate on the value directly
 Rep(3, r => r.Digit(v => acode += v))
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-opt"></a>
-### Optional: `Opt(o => o...)`
+### `Optional: Opt(o => o...)`
 
 Opt defines and optional sequence and the following rules apply:
 
-- If the first step passes then the remainder must complete.
+- If the first step passes then the remainder must succeed.
 - If the first step fails the remainder is aborted.
 - Note: The first step(s) may themselves be optional and in this case the following applies:
   - If any of the leading optional steps or first non-optional step passes then the remainder must complete.
@@ -170,16 +171,15 @@ Seq(s => s
     .Ch('d').OnFail("d expected")
 );
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-oneof"></a>
-### One Of: `OneOf(o => o...)`
+### `One Of: OneOf(o => o...)`
 
 OneOf defines a set of sequences that are *Or'd* together and one of them must succeed to pass:
 
-- The sequences could be a single operator or any Fex Element
-- The execution *breaks out* at the point where it succeeds - so the remainder is skipped.
+- Execution *breaks out* at the point where it succeeds - so the remainder is skipped.
 - Some examples from the *expression parser* below
 
 ```csharp
@@ -195,27 +195,27 @@ Seq(s => s.RefName("primary")
         .Seq(s => s.NumDecimal(n => numStack.Push(n)))
     ));
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-optoneof"></a>
-### Optional One Of: `OptOneOf(o => o...)`
+### `Optional One Of: OptOneOf(o => o...)`
 
 Optionally perform a OneOf, equivalent to: `Opt(o => o.OneOf(t => t...))`
 
 ```csharp
-OptOneOf(0, -1, r => r
+OptOneOf(o => o
     .Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
     .Seq(s => s.Ch('-').Ref("factor").Act(c => Calc((n1, n2) => n1 - n2)))
 );
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-notoneof"></a>
-### Not One Of: `NotOneOf(o => o...) / BreakOn(o => o...)`
+### `Not One Of: NotOneOf(o => o...) / BreakOn(o => o...)`
 
-Inverse of OneOf where it passes if none of the inner-sequences pass. else it fails:
+Inverse of OneOf where it passes if none of the sequences pass. else it fails:
 
 - Typically used at the beginning of Rep(eat) loops to break out of the loop.
 - `BreakOn(o => o...)` is an alias for NotOneOf that reads better in loops.
@@ -233,17 +233,17 @@ Rep0N(r => {
         .Seq(a => a.StringDelim().StrLit().Act(c => curElm.AddAttr($"prm-{prmIndex++}", c.Token)))
     )});
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-rep"></a>
-### Repeat: `Rep(repMin, repMax, r => r...)`
+### `Repeat: Rep(repMin, repMax, r => r...)`
 
 Rep defines a repeated sequence and the following rules apply:
 
-- repMin = 0: Repeat 0 to repMax times. Treats the sequence as an optional (see Opt rules)
-- repMin > 0: Must repeat at least repMin times
-- repMax = -1: Repeat repMin to N times.  Treats the sequence, after repMin, as an optional (see Opt rules)
+- repMin = 0: Repeat 0 to repMax times. Treats the sequence as an optional (see Opt rules).
+- repMin > 0: Must repeat at least repMin times.
+- repMax = -1: Repeat repMin to N times.  Treats the sequence, after repMin, as an optional (see Opt rules).
 - repMax > 0: Repeat repMin to repMax times and then terminates the loop.
 
 For convenience, several Repeat configurations are available:
@@ -259,11 +259,11 @@ Rep(3, r => r.Ch('a').Ch('b'));
 Rep0N(r => r.Ch('a').Ch('b'));
 Rep1N(r => r.Ch('a').Ch('b'));
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-reponeof"></a>
-### Repeat One Of: `RepOneOf(repMin, repMax, r => r...)`
+### `Repeat One Of: RepOneOf(repMin, repMax, r => r...)`
 
 Repeat a OneOf expression, equivalent to: `Rep(repMin, repMax, r => r.OneOf(o => o...))`
 
@@ -273,13 +273,13 @@ RepOneOf(0, -1, r => r
     .Seq(s => s.Ch('-').Ref("factor").Act(c => Calc((n1, n2) => n1 - n2)))
 );
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-fex"></a>
-### Include Expressions: `Fex(FlowExpr1, FlowExpr2, ...)`
+### `Include FexElements: Fex(FexElement1, FexElement2, ...)`
 
-Include a set of previously defined sub-expressions:
+Include a set of previously defined FexElements (sub-expressions):
 
 - For complex expressions it may be easier to factorize out smaller sub-expressions which are then included to form the whole.
 - A common sub-expressions may also be reused in several places using Fex(...). 
@@ -291,17 +291,17 @@ var cdSequence = fex.Seq(s => s.Ch('[') .Rep(3, r => r.Ch('c').Ch('d')) .Ch(']')
 
 var fullSequence = fex.Seq(s => s.Ch('{').Fex(abSequence, cdSequence).Ch('}'));
 ```
-[(toc)](#id-toc)
+[`toc`)](#id-toc)
 
 ---
 <a id="id-act"></a>
-### Action: `Act(Action<Ctx> action)`
+### `Action: Act(Action<Ctx> action)`
 
 Perform any Action based on the current state of the production. E.g.:
 
-- Set (or access) variables in the context or *closure*
+- Set (or access) variables in the context or *closure*.
 - Perform operations etc.
-- Note: The Act element has no affect on the validity of a sequence and may be used anywhere, even at the beginning.
+- Note: The Act element has no affect on the validity of a sequence and may be used anywhere.
 
 ```csharp
 // E.g. Preform a calculation with values previously recorded
@@ -310,45 +310,51 @@ Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
 // E.g. Negate the top stack value
 Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-repact"></a>
-### Repeat Action: `RepAct(int repeat, Action<Ctx, int> action)`
+### `Repeat Action: RepAct(int repeat, Action<Ctx, int> action)`
 
 Perform any repeated Action based on the current state of the production. E.g.:
 
 - Set (or access) variables in the context or *closure*
 - Perform operations etc.
-- Note: The RepAct element has no affect on the validity of a sequence and may be used anywhere, even at the beginning.
+- Note: The RepAct element has no affect on the validity of a sequence and may be used anywhere.
 
 ```csharp
 // c = context, i = 0 based index 
 RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name}"))
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-onfail"></a>
-### Fail Action: `OnFail(Action<Ctx> failAction)`
+### `Fail Action: OnFail(Action<Ctx> failAction)`
 
-Perform an Action if the last production failed:
+Perform a Fail Action if the last OP, Rep or OneOf failed:
 
 - Typically used for error reporting.
 - Valid only after an Op, Rep or OneOf, else it is ignored.
+- Invoked only if the last Op, Rep or OneOf failed.
 
 ```csharp
 Seq(s => s
     .Ch('(').OnFail("( expected")
     .Rep(3, -1, r => r.Digit()).OnFail("at least 3 digits expected")
     .Ch(')').OnFail(") expected")
+    .OneOf(s => s
+        .Str("one")
+        .Str("two")
+        .Str("three")
+    ).OnFail("one, two or three expected");
 );
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-fail"></a>
-### Force Fail Action: `Fail(Action<Ctx> failAction)`
+### `Force Fail Action: Fail(Action<Ctx> failAction)`
 
 Forces a failure and performs the failAction. Can use this as the last operation in a OneOf set for error messages / other.
 
@@ -360,11 +366,11 @@ pfe.OneOf(s => s
     .Fail("one, two or three expected")
 );
 ``` 
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-assert"></a>
-### Assert: `Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`
+### `Assert: Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`
 
 Assert if a condition is true. Returns false and performs failAction on failure.
 
@@ -373,18 +379,19 @@ Seq(s => s.Ch('/').Ref("unary")
     .Assert(c => numStack.Peek() != 0, e => e.LogError("Division by 0")) // Trap division by 0
     .Act(c => Calc((n1, n2) => n1 / n2)))
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-ref"></a>
-### Forward Reference: `RefName(string name),  Ref(string refName)`
+### `Forward Reference: RefName(string name),  Ref(string refName)`
 
 These elements facilitate *Forward Referencing* and/or *Recursion* (see the Expression parser for an example):
 
-- RefName(string name): Assigns a name to the current production sequence.
-- Ref(string name): References/includes a named sequence in the current sequence.
+- RefName(string name): Assigns a name to the current production/FexElement.
+- Ref(string name): References/includes a named production/FexElement in the current sequence.
+- This is similar to `Fex(FexElement, ...)`. Fex(...) should be used if the element/sub-expression is previously defined, as it is more efficient.
 
-Segment of the expression parser below
+Segment of the expression parser below: 
 
 ```csharp
 Seq(s => s.RefName("expr") // Give this sequence a name which can be referenced later
@@ -394,11 +401,11 @@ Seq(s => s.RefName("expr") // Give this sequence a name which can be referenced 
         .Seq(s => s.Ch('-').Ref("factor").Act(c => Calc((n1, n2) => n1 - n2)))
     ));
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-optself"></a>
-### Optional Self Recursion: `OptSelf()`
+### `Optional Self Recursion: OptSelf()`
 
 Optional recursive inclusion of the current production sequence within itself.
 
@@ -407,25 +414,25 @@ Optional recursive inclusion of the current production sequence within itself.
 // digits => DIGIT digits | Eos
 Seq(s => s.Digit().OptSelf().IsEos());
 ```
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
----
-### Recursion Mechanism notes
+
+### Recursion Mechanism notes:
 
 A Flow expressions implement recursion via Forward Referencing, OptSelf or Fex inclusion.
 
 > **Note** Flow Expressions do not support [*Left Recursion*](https://en.wikipedia.org/wiki/Left_recursion) (which will cause an endless loop and possibly a stack overflow)
 
 
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-preop"></a>
-### Pre-Operations: `GlobalPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`
+### `Pre-Operations: GlobalPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`
 
 PreOps execute before an Op executes and are typically used to skip spaces, comments and newlines etc. before tokens when parsing scripts. 
 
-A PreOp is efficient as it will execute only once while trying several *lookahead* Operations
+A PreOp is efficient as it will execute only once while trying several *lookahead* Operations:
 
 | Name | Description |
 |-------|-------------|
@@ -438,11 +445,11 @@ See the Expression example which uses a GlobalPreOp to skip all spaces before th
 > - The preOp action may be null if no PreOp should be executed.
 > - The above mechanism could then be used to *switch off* the GlobalPreOp for selected Op's.
 
-[(toc)](#id-toc)
+[`TOC`](#id-toc)
 
 ---
 <a id="id-trace"></a>
-### Tracing : `Trace(Action<Ctx, bool> traceAction)` <br/> Tracing': `Trace(Action<Ctx, object, bool> traceAction)`
+### `Tracing : Trace(Action<Ctx, bool> traceAction)` <br/> `Tracing : Trace(Action<Ctx, object, bool> traceAction)`
 
 Trace action to perform on last Op. Typically display a message as a debugging aid. Should directly follow last Op:
 
@@ -479,4 +486,4 @@ AnyCh("+-", v => opStack.Push(v)).CTrace((c, v) => $"AnyCh val: {v}")
 // Example output: AnyCh val: + : True
 ```
 
-[(toc)](#id-toc)
+[`TOC`](#id-toc)

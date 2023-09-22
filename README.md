@@ -137,24 +137,26 @@ void QuickStart()
 ```
 
 ## Reference Documents
+- [Overview](Docs/FexOverview.md): Introductory overview explaining how Flow Expression work.
 - [Fex Element reference](Docs/FexElementsRef.md): Complete reference of all the Fex Elements (building blocks).
 - [FexScanner](Docs/FexScannerExt.md): The supplied Fex scanner and context extensions reference.
 - [Custom Scanner tutorial](Docs/CustomScanner.md): Describes how to build a custom scanner with examples.
+- Also see the *FexSampleSet* project for all the example code and more.
 
 ## About
 
 Flow Expressions provide a novel mechanism of constructing parsers using a simple fluent syntax. 
 Having developed several programming languages and parsers in the past I came up with this idea as an experiment. 
-It think it turned out very well, and I find it far more functional and intuitive than say *Parser Combinators* and *PEG*, that I decided to share it.
+It think it turned out very well, and I find it far more functional and intuitive than say *Parser Combinators* and *PEG*, give it a try!
 
 > It actually makes parser construction quite fun as you can achieve a lot with a few lines of code, while the system does all the heavy lifting.
 >
 > Maybe some of you could help with suggestions, a few nice tutorials and examples etc.
 
 Flow Expressions have since been used to create sophisticated parsers for various projects:
-- ElementScript
+- ElementScript (coming soon and it's very cool!)
 - Markdown to Html parser
-- CShapCodeDoc - extract and generate code reference documentation (some of reference material here was generated this way)
+- CShapCodeDoc - extract and generate code reference documentation (some of the reference material here was generated this way)
 - Several others...
 
 > A potential future extension is to provide a *lookahead* mechanism - will see if there is any interest.

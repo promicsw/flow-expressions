@@ -196,6 +196,110 @@ void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
         : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
 
+void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
+{
+    /*
+     * Expression Grammar:
+     * expression => factor ( ( '-' | '+' ) factor )* ;
+     * factor     => unary ( ( '/' | '*' ) unary )* ;
+     * unary      => ( '-'  unary ) | primary ;
+     * primary    => NUMBER | "(" expression ")" ;
+    */
+
+    // Number Stack for calculations:
+    Stack<double> numStack = new Stack<double>();
+
+    // The FlowExpression object used to create FexElements with FexScanner as the context:
+    var fex = new FlowExpression<FexScanner>();
+
+    // Define the main expression production, which returns a Sequence element:
+    var expr = fex.Seq(s => s
+
+        // Forward reference to the factor element, which is only defined later.
+        // The element is then included at this point in the sequence.
+        .Ref("factor")
+
+        // Repeat one of the contained sequences zero or more times:
+        .RepOneOf(0, -1, r => r
+
+            // If we have a '+' run factor and then add the top two values on the stack: 
+            .Seq(s => s.Ch('+').Ref("factor").Act(c => numStack.Push(numStack.Pop() + numStack.Pop())))
+
+            // If we have a '-' run factor and then subtract the top two values on the stack: 
+            // o We minus the first and add the second because the stack is in reverse order.
+            .Seq(s => s.Ch('-').Ref("factor").Act(c => numStack.Push(-numStack.Pop() + numStack.Pop())))
+         ));
+
+    // Define the factor production:
+    var factor = fex.Seq(s => s
+        .RefName("factor")  // Set the forward reference name.
+        .Ref("unary")       // Forward reference to unary
+
+        // Repeat one of the contained sequences zero or more times:
+        .RepOneOf(0, -1, r => r
+
+            // If we have a '*' run unary and then multiply the top two values on the stack: 
+            .Seq(s => s.Ch('*').Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
+
+            // If we have a '/' run unary, check for division by zero and then divide the top two values on the stack:
+            // Note again the stack is in reverse order.
+            .Seq(s => s.Ch('/').Ref("unary")
+                       .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0 and report as error.
+                       .Act(c => numStack.Push(1 / numStack.Pop() * numStack.Pop())))
+         ));
+
+    // Define the unary production:
+    var unary = fex.Seq(s => s
+        .RefName("unary") // Set the forward reference name.
+
+        // Now we either negate a unary or have a primary.
+        .OneOf(o => o
+            .Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
+            .Ref("primary")
+         ));
+
+    // Define the primary production:
+    var primary = fex.Seq(s => s
+        .RefName("primary") // Set the forward reference name.
+
+        // Now we either have a nested expression as (expr) or a numeric value:
+        .OneOf(o => o
+
+            // Handle a nested expression in brackets and report an error for a missing closing bracket:
+            // o Fex(expr) references/includes the expr element previously defined.
+            // o We could have used the RefName() / Ref() combination but this is more efficient.
+            // o Also Fex can take any number of elements Fex(e1, e2 ... en)
+            .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
+
+            // Ultimately we have a number which is just pushed onto the stack. 
+            .Seq(s => s.NumDecimal(n => numStack.Push(n)))
+         ).OnFail("Primary expected"));  // Fail with an error if not one of the above.
+
+    // Define the Axiom element that we will run later.
+    var exprEval = fex.Seq(s => s
+
+        // Attach a pre-operation to all Op's to skip spaces before:
+        // o Uses the Scanner.SkipSp() method for this.
+        // o Pre-operations run efficiently only when needed. 
+        .GlobalPreOp(c => c.SkipSp())
+
+        // Reference/include the previously defined expr element
+        .Fex(expr)
+
+        // Check that we ended at end-of-source else it's an error:
+        .IsEos().OnFail("invalid expression"));
+
+    // Create the FexScanner with the calc string as source:
+    var scn = new FexScanner(calc);
+
+    // Run the Axiom with the scanner which returns true/false:
+    // o If valid display the answer = top value on the stack.
+    // o Else display the error logged in the scanner's shared ErrorLog.
+    Console.WriteLine(exprEval.Run(scn)
+        ? $"Answer = {numStack.Pop():F4}"
+        : scn.ErrorLog.AsConsoleError("Expression Error:"));
+}
+
 // Expression Evaluation REPL
 // Last result is stored in variable 'a' which may be used in the next expression
 void ExpressionREPL() {
