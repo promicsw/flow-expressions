@@ -66,6 +66,13 @@ mechanism with methods of the following basic form:
 ---
 <a id="id-seq"></a>
 ### `Sequence: Seq(s => s...)`
+```mermaid
+graph LR
+  subgraph "Seq (Sequence)" 
+    direction LR
+    A[FexElement 1] --> B[FexElement 2] -.-> C[FexElement n];
+  end
+```
 A Sequence defines a series of steps that must complete in full in order to pass. Sequences are the primary building structures of flow expressions:
 
 - A sequence consists of one or more FexElements.
