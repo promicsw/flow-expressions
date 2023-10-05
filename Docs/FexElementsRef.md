@@ -1,47 +1,67 @@
 
 
 <a id="id-toc"></a>
-# Fex Elements Reference
+# Fex Element Reference
 
-The *productions* of a Flow Expression are constructed via the various FexElements which will be discussed in the following sections. 
+Flow Expressions are defined by a structure of *FexElements* built via a Fluent API. This defines the logical flow and operations of the flow expression in a very readable format closely resembling a flow *grammar*:
+> - **Context:** Flow expressions operate on a user supplied context, which is any environment that manages and provides input and state (and may include the *closure* environment where the expression is defined).
+> - For a Parser, the context would be a **Scanner**  that manages text scanning and provides *Tokens* to operate on (a default scanner, see [FexScanner](Docs/FexScannerExt.md), is supplied).
+> - In the documentation this context is denoted by **T** or **Ctx**.
 
-The expression is constructed via a FexBuilder class that provides the fluent 
-mechanism via methods of the following basic form (where T is the context):
+## Factory: `FlowExpression<T>`
+
+The `FlowExpression<T>` class operates as a *factory* to build and return FexElements which are used in other productions or as the *Axiom* (root) to be run.
+> The innards of each element are built via the encapsulated `FexBuilder<T>` class.
+
+**Basic mechanism:**
 ```csharp
- public FexBuilder<T> Seq(Action<FexBuilder<T>> buildFex)
+using Psw.FlowExpressions;
+
+// Create a FlowEpression factory using FexScanner as the context:
+var fex = new FlowExpression<FexScanner>();
+
+// Create a sequence element (element is of type FexElement<T>):
+var element = fex.Seq(Action<FexBuilder<T>> buildFex);
+
+// Run the element (axiom) with supplied context and process result.
+bool result = element.Run(new FexScanner("text to process"));
+
+// Handle pass or failure:
 ```
-The `FlowExpression<T>` class is used create FexElements which may be used in other productions (see Fex(...) below) or as the *Axiom* to run.
+
+## `FexBuilder<T>`
+The actual expression is constructed via the `FexBuilder<T>` class that provides the fluent 
+mechanism with methods of the following basic form:
 ```csharp
-public FexElement<T> Seq(Action<FexBuilder<T>> buildFex)
+ FexBuilder<T> Element(Action<FexBuilder<T>> buildFex)
 ```
 
-
-> **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression class.
+> - The details of each element type are documented below.
+> - **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression factory.
 
 | Fex Element | Brief |
-|-------------|-------|
-|[`Seq(s => s...)`*](#id-seq)| **Sequence:** Series of steps that must complete in full in order to pass.|
-|[`Op(Func<Ctx, bool> op)`](#id-op)| **Operator:** Perform an operation on the Context returning a true/false result. |
-|[`ValidOp(Action<Ctx> action)`](#id-validop)| **Always valid operator:** Perform and operation on the Context and always returns true. |
-|[`ActValue<V>(Action<V> valueAction)`](#id-value)| **Value Action:** Bind and action to an operator that records a value.|
-|[`Opt(o => o...)`* ](#id-opt)| **Optional:** Optional sequence.|
-|[`OneOf(o => o...)`*](#id-oneof)| **One Of:** Set of sequences that are *Or'd* together and one of them must succeed to pass.|
-|[`OptOneOf(o => o...)`*](#id-optoneof)| **Optional One Of:** Optionally perform a OneOf.|
-|[`NotOneOf(o => o...)`*](#id-notoneof)| **Not One Of:** Inverse of OneOf.|
-|[`BreakOn(o => o...)`](#id-notoneof)| **Alias for NotOneOf:** Reads better in loops.|
-|[`Rep(repMin, repMax, r => r...)*`<br/>`Rep(count, r => r...)*`<br/>`Rep0N(r => r...)*`<br/>`Rep1N(r => r...)`*](#id-rep)| **Repeat:** Repeated sequences.|
-|[`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof)| **Repeat One Of:** Repeated a OneOf expression.|
-|[`Fex(FexElement1, FexElement2, ...)`](#id-fex)| **Include FexElements:** Include a set of previously defined FexElements.|
-|[`Act(Action<Ctx> action)`](#id-act)| **Action:** Perform any external Action based on the current state of the production.|
-|[`RepAct(int repeat, Action<Ctx, int> action)`](#id-repact)| **Repeat Action:** Perform any external repeated Action based on the current state of the production.|
-|[`OnFail(Action<Ctx> failAction)`](#id-onfail)| **Fail Action:**  Perform an Action if the last operator or production failed.|
-|[`Fail(Action<Ctx> failAction)`](#id-fail)| **Force Fail Action:** Force a failure and perform an Action.|
-|[`Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`](#id-assert)| **Assert** if a condition is true else performs failAction.|
-|[`RefName(string name),  Ref(string refName)`](#id-ref)| Forward Referencing and inclusion.|
-|[`OptSelf()`](#id-optself)| Optional recursive inclusion of the current production sequence within itself.|
-|[`GlobalPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`](#id-preop)| **Pre-Operations:** Attach pre-operations to operators.|
-|[`Trace(Action<Ctx, bool> traceAction)`](#id-trace)| Tracing utility.|
-|[`Trace(Action<Ctx, object, bool> traceAction)`](#id-trace)| Tracing utility with value.|
+| :---------- | :---- |
+| [`Seq(s => s...)*`](#id-seq) | **Sequence:** Series of steps that must complete in full in order to pass. |
+| [`Op(Func<Ctx, bool> op)`](#id-op) | **Operator:** Perform an operation on the Context returning a boolean result. |
+| [`ValidOp(Action<Ctx> action)`](#id-validop) | **Always valid operator:** Perform and operation on the Context and always returns true. |
+| [`ActValue<V>(Action<V> valueAction)`](#id-value) | **Value Action:** Bind and action to an operator that records a value. |
+| [`Opt(o => o...)*` ](#id-opt) | **Optional:** Optional sequence. |
+| [`OneOf(o => o...)*`](#id-oneof) | **One Of:** Set of sequences that are *Or'd* together and one of them must succeed to pass. |
+| [`OptOneOf(o => o...)`*](#id-optoneof) | **Optional One Of:** Optionally perform a OneOf. |
+| [`NotOneOf(o => o...)*`](#id-notoneof) | **Not One Of:** Inverse of OneOf. |
+| [`BreakOn(o => o...)`](#id-notoneof) | **Alias for NotOneOf:** Reads better in loops. |
+| [`Rep(repMin, repMax, r => r...)*`<br/>`Rep(count, r => r...)*`<br/>`Rep0N(r => r...)*`<br/>`Rep1N(r => r...)`*](#id-rep) | **Repeat:** Repeated sequences. |
+| [`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof) | **Repeat One Of:** Repeated a OneOf expression. |
+| [`Fex(FexElement1, FexElement2, ...)`](#id-fex) | **Include FexElements:** Include a set of previously defined FexElements. |
+| [`Act(Action<Ctx> action)`](#id-act) | **Action:** Perform any external Action based on the current state of the production. |
+| [`RepAct(int repeat, Action<Ctx, int> action)`](#id-repact) | **Repeat Action:** Perform any external repeated Action based on the current state of the production. |
+| [`OnFail(Action<Ctx> failAction)`](#id-onfail) | **Fail Action:**  Perform an Action if the last operator or production failed. |
+| [`Fail(Action<Ctx> failAction)`](#id-fail) | **Force Fail Action:** Force a failure and perform an Action. |
+| [`Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`](#id-assert) | **Assert** if a condition is true else performs failAction. |
+| [`RefName(string name),  Ref(string refName)`](#id-ref) | Forward Referencing and inclusion.|
+| [`OptSelf()`](#id-optself) | Optional recursive inclusion of the current production sequence within itself. |
+| [`GlobalPreOp(Action<Ctx> preOp)`<br/>`PreOp(Action<T> preOp)`](#id-preop) | **Pre-Operators:** Attach pre-operations to operators. |
+| [`Trace(Func<Ctx, string> traceMessage, int level = 0)`<br/>`TraceOp(Func<Ctx, string> traceMessage, int level = 0)`<br/>`TraceOp(Func<Ctx, object, string> traceMessage, int level)`](#id-trace) | Tracing utilities. |
 
 ---
 <a id="id-seq"></a>
@@ -136,18 +156,20 @@ OneOf(o => o
 
 This binds an Action to an operator (Op) that recorded a value, and should follow directly after the Op:
 
-- If the Op succeeds, and has a non-null value, then valueAction is performed.
+- If the Op succeeds, and has a non-null value, then valueAction is invoked.
 - The value is recorded as an object and must be cast to the actual type before use (via V, or it may be inferred from the action).
 - Note that there a several other ways to do this:
   - The Op could directly perform an operation on a value it produces.
   - Context operator extensions may include a valueAction as part of the operator.
 
 ```csharp
+var digits = "";
+
 // Basic form where Digit() records the digit character just read
-Rep(3, r => r.Digit().ActValue<char>(v => acode += v))
+Rep(3, r => r.Digit().ActValue<char>(v => digits += v))
 
 // Context Operator Extension configured to operate on the value directly
-Rep(3, r => r.Digit(v => acode += v))
+Rep(3, r => r.Digit(v => digits += v))
 ```
 [`TOC`](#id-toc)
 
@@ -158,7 +180,7 @@ Rep(3, r => r.Digit(v => acode += v))
 Opt defines and optional sequence and the following rules apply:
 
 - If the first step passes then the remainder must succeed.
-- If the first step fails the remainder is aborted.
+- If the first step fails the remainder is aborted - without error.
 - Note: The first step(s) may themselves be optional and in this case the following applies:
   - If any of the leading optional steps or first non-optional step passes then the remainder must complete.
   - If the leading optional step(s) and the first non-optional fail then the sequence is aborted.
@@ -177,10 +199,12 @@ Seq(s => s
 <a id="id-oneof"></a>
 ### `One Of: OneOf(o => o...)`
 
-OneOf defines a set of sequences that are *Or'd* together and one of them must succeed to pass:
+OneOf defines a set of sequences, where one of the sequences must succeed:
 
-- Execution *breaks out* at the point where it succeeds - so the remainder is skipped.
-- Some examples from the *expression parser* below
+- Execution *breaks out* at the point where it succeeds.
+- If none of the sequences pass then the production fails.
+ 
+ Some examples from the *expression parser* below:
 
 ```csharp
 Seq(s => s.RefName("unary")
@@ -201,7 +225,11 @@ Seq(s => s.RefName("primary")
 <a id="id-optoneof"></a>
 ### `Optional One Of: OptOneOf(o => o...)`
 
-Optionally perform a OneOf, equivalent to: `Opt(o => o.OneOf(t => t...))`
+Optionally perform a OneOf, equivalent to: `Opt(o => o.OneOf(t => t...))`  
+
+Define an optional set of sequences where one of them may pass:
+- Same as OneOf but does not fail if no sequence passes.
+ - Execution *breaks out* at the point where it does succeeds.
 
 ```csharp
 OptOneOf(o => o
@@ -215,11 +243,14 @@ OptOneOf(o => o
 <a id="id-notoneof"></a>
 ### `Not One Of: NotOneOf(o => o...) / BreakOn(o => o...)`
 
-Inverse of OneOf where it passes if none of the sequences pass. else it fails:
-
-- Typically used at the beginning of Rep(eat) loops to break out of the loop.
+Define a set of Sequences, where it fails if any sequence passes (inverse of OneOf):<br/>
+- Typically used at the beginning of Rep(eat) loops to break out of the loop.<br/>
+- Or at the start of any Opt (optional) sequence to skip the remainder of the sequence.<br/>
+- Execution *short circuits* if any sequence succeeds.<br/>
+- If any of the sequences pass then the production fails.
 - `BreakOn(o => o...)` is an alias for NotOneOf that reads better in loops.
-- In the example below if any of the steps in the BreakOn sequence passes, then BreakOn/NotOneOf fails and the loop is terminated because it was the first step in the Rep inner-sequence (see Rep rules).
+
+ In the example below if any of the steps in the BreakOn sequence passes, then BreakOn/NotOneOf fails and the loop is terminated because it was the first step in the Rep inner-sequence (see Rep rules).
 
 ```csharp
 Rep0N(r => {
@@ -266,6 +297,12 @@ Rep1N(r => r.Ch('a').Ch('b'));
 ### `Repeat One Of: RepOneOf(repMin, repMax, r => r...)`
 
 Repeat a OneOf expression, equivalent to: `Rep(repMin, repMax, r => r.OneOf(o => o...))`
+
+Repeat a OneOf construct and the following rules apply:
+- repMin = 0: Repeat 0 to repMax times.Treats the OneOf as an optional(see Opt rules).<br/>
+- repMin > 0: Must repeat at least repMin times.<br/>
+- repMax = -1: Repeat repMin to N times.Treats the OneOf, after repMin, as an optional (see Opt rules).<br/>
+- repMax > 0: Repeat repMin to repMax times and then terminates the loop.
 
 ```csharp
 RepOneOf(0, -1, r => r
@@ -332,7 +369,7 @@ RepAct(samples.Count, (c, i) => Console.WriteLine($"  {i + 1} - {samples[i].Name
 <a id="id-onfail"></a>
 ### `Fail Action: OnFail(Action<Ctx> failAction)`
 
-Perform a Fail Action if the last OP, Rep or OneOf failed:
+Perform a Fail Action if the last Op (or derivative), Rep or OneOf failed:
 
 - Typically used for error reporting.
 - Valid only after an Op, Rep or OneOf, else it is ignored.
@@ -354,7 +391,7 @@ Seq(s => s
 
 ---
 <a id="id-fail"></a>
-### `Force Fail Action: Fail(Action<Ctx> failAction)`
+### `Force a Fail Action: Fail(Action<Ctx> failAction)`
 
 Forces a failure and performs the failAction. Can use this as the last operation in a OneOf set for error messages / other.
 
@@ -388,7 +425,8 @@ Seq(s => s.Ch('/').Ref("unary")
 These elements facilitate *Forward Referencing* and/or *Recursion* (see the Expression parser for an example):
 
 - RefName(string name): Assigns a name to the current production/FexElement.
-- Ref(string name): References/includes a named production/FexElement in the current sequence.
+- Ref(string refName): References/includes a named production/FexElement in the current sequence.
+- **Note:** A reference name lookup is not case sensitive.
 - This is similar to `Fex(FexElement, ...)`. Fex(...) should be used if the element/sub-expression is previously defined, as it is more efficient.
 
 Segment of the expression parser below: 
@@ -428,62 +466,115 @@ A Flow expressions implement recursion via Forward Referencing, OptSelf or Fex i
 
 ---
 <a id="id-preop"></a>
-### `Pre-Operations: GlobalPreOp(Action<Ctx> preOp), PreOp(Action<T> preOp)`
+### Pre-Operators:
 
-PreOps execute before an Op executes and are typically used to skip spaces, comments and newlines etc. before tokens when parsing scripts. 
+Pre-operators execute before an Op (operator) as and Action on the context: 
+- Typically used to skip spaces, comments and newlines etc. before tokens when parsing scripts. 
+- Pre-operators are efficient an only execute once while trying several lookahead operations.
 
-A PreOp is efficient as it will execute only once while trying several *lookahead* Operations:
+<br/>
 
-| Name | Description |
-|-------|-------------|
-|`GlobalPreOp(Action<Ctx> preOp)`|Global setting to automatically attach to all operators.|
-|`PreOp(Action<Ctx> preOp)`| Use directly after an operator to attach/override a PreOp|
+> **`GlobalPreOp(Action<Ctx> preOp)`**  
+> - Binds a pre-operator to all subsequent operators.  
 
-See the Expression example which uses a GlobalPreOp to skip all spaces before the *tokens*
+<br/>
 
-> **Notes:** 
-> - The preOp action may be null if no PreOp should be executed.
-> - The above mechanism could then be used to *switch off* the GlobalPreOp for selected Op's.
+> **`PreOp(Action<Ctx> preOp)`**  
+> - Use directly after an operator to bind a pre-operator to the preceding operator:
+> - The preOp may be null if no PreOp should be executed.
+> - The above mechanism could be used to *switch off* the GlobalPreOp's for selected Op's.
+
+See the Expression example which uses a GlobalPreOp to skip all spaces before the *tokens*.
 
 [`TOC`](#id-toc)
 
 ---
+
 <a id="id-trace"></a>
-### `Tracing : Trace(Action<Ctx, bool> traceAction)` <br/> `Tracing : Trace(Action<Ctx, object, bool> traceAction)`
+### Tracing Utilities:  
 
-Trace action to perform on last Op. Typically display a message as a debugging aid. Should directly follow last Op:
+Tracing is typically used for debugging purposes and facilitates a means to display and/or log trace messages for a running flow expression
 
-- Ctx is the Context and bool will contain the result of the Op.
-- In the second Trace method, object is the value logged by the Op and must be cast to the appropriate type.
-
-For Console output FexBuilder extensions are required, for example, as follows:
-
+> **Note:** Tracing must be switched on (by supplying an IFexTracer in the FlowExpression constructor) for this to have any effect.
+ 
+**IFexTracer:**
 ```csharp
-public static class FexBuilderExt
+public interface IFexTracer
 {
-    public static FexBuilder<T> CTrace<T>(this FexBuilder<T> b ,string text) 
-        => b.Trace((c, res) => Console.WriteLine($"{text} : {res}"));
+    // General purpose tracing message.
+    void Trace(string message, int level);
 
-    public static FexBuilder<T> CTrace<T>(this FexBuilder<T> b, Func<T, string> trace) 
-        => b.Trace((c, res) => Console.WriteLine($"{trace(c)} : {res}"));
-
-    public static FexBuilder<T> CTrace<T>(this FexBuilder<T> b, Func<T, object, string> trace) 
-        => b.Trace((c, v, res) => Console.WriteLine($"{trace(c, v)} : {res}"));
+    // Tracing message with the result of an operator.
+    void Trace(string message, bool pass, int level);
 }
 ```
 
-Example usage of the above:
+#### Three different forms of tracing are described below:
+
+> **`Trace(Function<Ctx, string> traceMessage, int level = 0)`**  
+> - Produce a Trace message via the context and assign a level  
+> - Calls `IFexTracer.Trace(message, level)`
+
+<br/>
+
+> **`TraceOp(Func<Ctx, string> traceMessage, int level = 0)`**    
+> - Bind a trace message to the preceding operator:
+> - Produce a Trace message via the context and assign a level.  
+> - Calls `IFexTracer.Trace(message, pass, level)` where pass is the result of the preceding operator.
+
+<br/>
+
+> **`TraceOp(Func<Ctx, object, string> traceMessage)`**  
+> - Bind a trace message to the preceding operator that produces a value:
+> - Produce a Trace message via the context, value (as an object) and assign a level. 
+> - Calls `IFexTracer.Trace(message, pass, level)` where pass is the result of the preceding operator.
+
+<br/>
+
+**A sample IFexTracer for console output:**
+
 ```csharp
-// Trace without value (i.e value is known):
-Ch('+').CTrace(t => $"Ch + {t.LineRemainder()}") 
+public class ConsoleTracer : IFexTracer
+{
+    public void Trace(string message, int level) {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"{new String(' ', level * 2)}{message}");
+        Console.ForegroundColor = ConsoleColor.White;
+    }
 
-// Example output: Ch + [- 4 / ( 9 - 1 )] : False
+    public void Trace(string message, bool pass, int level) {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"{new String(' ', level * 2)}{message} [{pass}]");
+        Console.ForegroundColor = ConsoleColor.White;
+    }
+}
+```
 
+<br/>
 
-// Trace with value:
-AnyCh("+-", v => opStack.Push(v)).CTrace((c, v) => $"AnyCh val: {v}") 
+**Example usage of the above:**
+```csharp
 
-// Example output: AnyCh val: + : True
+// Enable tracing via an IFexTracer in the FlowExpression constructor.
+var fex = new FlowExpression<FexScanner>(new ConsoleTracer());
+
+// Trace state:
+var after = fex.Seq(s => s.Trace(c => "try after sequence.")
+        .Opt(o => o.Ch('a').Ch('b').OnFail("b expected")) // If we have a then b must follow
+        .Ch('c').OnFail("c expected")
+    );
+
+// Example output: try after sequence.
+
+// Trace Op without value (since value is known):
+Ch('+').TraceOp(c => "Check for +") 
+
+// Example output: Check for + [False]
+
+// Trace Op with value:
+AnyCh("+-", v => opStack.Push(v)).TraceOp((c, v) => $"AnyCh val: {v}") 
+
+// Example output: AnyCh val: + [True]
 ```
 
 [`TOC`](#id-toc)

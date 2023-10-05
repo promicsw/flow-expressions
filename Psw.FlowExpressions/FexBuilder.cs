@@ -5,7 +5,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 
 namespace Psw.FlowExpressions
@@ -48,23 +51,25 @@ namespace Psw.FlowExpressions
             => _buildState.AddAndBuild(this, build, prod, setLastFex);
 
         /// <summary>
-        /// Assign a name to the current production sequence for later reference
+        /// Assign a name to the current production sequence for later reference:<br/>
+        /// - Note: a later lookup of this reference is not case sensitive.
         /// </summary>
         public FexBuilder<T> RefName(string name) {
-            _buildState.LogRef(name);
+            _buildState.LogRef(name.ToLower());
             return this;
         }
 
         /// <summary>
-        /// Reference/include a named sequence in the current sequence
+        /// Reference/include a named sequence in the current sequence:<br/>
+        /// - Note: the refName lookup is not case sensitive.
         /// </summary>
         public FexBuilder<T> Ref(string refName) {
-            _buildState.LinkRef(refName);
+            _buildState.LinkRef(refName.ToLower());
             return this;
         }
 
         /// <summary>
-        /// Optional recursive inclusion of the current production sequence within itself 
+        /// Optional recursive inclusion of the current production sequence within itself. 
         /// </summary>
         public FexBuilder<T> OptSelf() {
             var fex = _buildState.HostFex;
@@ -72,7 +77,7 @@ namespace Psw.FlowExpressions
         }
 
         /// <summary>
-        /// Include a set of previously defined production sequences
+        /// Include a set of previously defined FexElements (sub-expressions).
         /// </summary>
         public FexBuilder<T> Fex(params FexElement<T>[] fex) {
             for (int i = 0; i < fex.Length; i++) AddFex(fex[i]);
@@ -80,26 +85,26 @@ namespace Psw.FlowExpressions
         }
 
         /// <summary>
-        /// Perform an Operation on Context and current Value returning true/false for pass/failure
+        /// Perform an Operation on the Context-T and current Value (for operators that record a value) returning a boolean for pass/failure.
         /// </summary>
         public FexBuilder<T> Op(Func<T, FexOpValue, bool> op)
             => AddFex(_buildState.LastFex = _buildState.LastOpr = new FexOpr<T>(op, _buildState.PreOp));
 
         /// <summary>
-        /// Perform an Operation on Context returning true/false for pass/failure
+        /// Perform an Operation on the Context-T returning a boolean for pass/failure.
         /// </summary>
         public FexBuilder<T> Op(Func<T, bool> op) => Op((c, v) => op(c));
 
         /// <summary>
-        /// Perform an Operation on Context and always returns true/pass<br/>
-        /// - Typically use as the last element of a OneOf set as the default (and valid) action
+        /// Perform an Operation on the Context-T and always returns true/pass:<br/>
+        /// - Typically use as the last element of a OneOf set as the default (and valid) action.
         /// </summary>
         /// <param name="action"></param>
         /// <returns></returns>
         public FexBuilder<T> ValidOp(Action<T> action) => Op((c, v) => { action(c); return true; });
 
         /// <summary>
-        /// Assert if a condition is true. Returns false and performs failAction on failure
+        /// Assert if a condition on the Context-T is true. Returns false and performs failAction on the Context-T for a failure.
         /// </summary>
         public FexBuilder<T> Assert(Func<T, bool> assert, Action<T> failAction = null) {
             AddFex(_buildState.LastFex = new FexOpr<T>(assert, _buildState.PreOp));
@@ -108,13 +113,13 @@ namespace Psw.FlowExpressions
         }
 
         /// <summary>
-        /// Perform an Action on the Context (has no affect on a sequence so it can be used at the start of a sequence or loop etc.)
+        /// Perform an Action on the Context-T (does no affect the validity of a sequence).
         /// </summary>
         public FexBuilder<T> Act(Action<T> action) => AddFex(new FexAct<T>(action));
 
         /// <summary>
-        /// Perform a repeated Action on the Context (has no affect on a sequence so it can be used at the start of a sequence or loop etc.)<br/>
-        /// - The action delegate parameters are the Context and a 0 based index for every iteration.
+        /// Perform a repeated Action on the Context-T (does no affect the validity of a sequence):<br/>
+        /// - The action delegate parameters are the Context-T and a 0 based iteration counter.
         /// </summary>
         /// <param name="repeat">Repeat count</param>
         public FexBuilder<T> RepAct(int repeat, Action<T, int> action) => AddFex(new FexRepAct<T>(repeat, action));
@@ -124,81 +129,102 @@ namespace Psw.FlowExpressions
         /// - Typically used as the last item in a OneOf construct to make it valid by performing a default action.<br/>
         /// - Using Act in the above case would cause the OneOf construct to fail since Act does not return true;
         /// </summary>
-        public FexBuilder<T> DefaultAct(Action<T> action) => AddFex(new FexAct<T>(action, FexCheckResult.Passed));
+        //Replaced by ValidOp
+        //public FexBuilder<T> DefaultAct(Action<T> action) => AddFex(new FexAct<T>(action, FexCheckResult.Passed));
 
         /// <summary>
-        /// Define a Sequence (of steps) that must complete in full to pass
+        /// Define a Sequence (of steps) that must complete in full to pass:<br/>
+        /// - A step is any FexElement.
         /// </summary>
         public FexBuilder<T> Seq(Action<FexBuilder<T>> buildFex) => AddAndBuild(buildFex, new FexSequence<T>());
 
         /// <summary>
-        /// Define an Optional Sequence. If the initial step passes the remaining sequence must complete in full.<br/>
-        /// Note: The initial step(s) may also be Optional and if any of them or the first non-optional step passes 
+        /// Define an Optional Sequence:<br/>
+        /// - If the first step passes the remainder must succeed.<br/>
+        /// - If the first step fails the remainder is aborted - without error.<br/>
+        /// - Note: The first step(s) may themselves be Optional and if any of them or the first non-optional step passes 
         /// then the remainder must pass as before.
         /// </summary>
         public FexBuilder<T> Opt(Action<FexBuilder<T>> buildFex) => AddAndBuild(buildFex, new FexOptional<T>());
 
         /// <summary>
-        /// Define a set of Sequences, where one of the sequences must pass
+        /// Define a set of Sequences, where one of the sequences must succeed:<br/>
+        /// - Execution breaks out at the point where it succeeds.
+        /// - If none of the sequences pass then the production fails.
         /// </summary>
-        /// <param name="buildFex"></param>
-        /// <returns>True if one of the sequences pass else False</returns>
         public FexBuilder<T> OneOf(Action<FexBuilder<T>> buildFex) => AddAndBuild(buildFex, new FexOneOf<T>(), true);
 
         /// <summary>
-        /// Define an optional set of sequences where one of them may pass
+        /// Define an optional set of sequences where one of them may pass:<br/>
+        /// - Same as OneOf but does not fail if no sequence passes.
+        /// - Execution breaks out at the point where it does succeeds.
         /// </summary>
         public FexBuilder<T> OptOneOf(Action<FexBuilder<T>> buildFex) => Opt(o => o.OneOf(buildFex));
 
         /// <summary>
-        /// Inverse of OneOf, where it fails if any sequence passes<br />
-        /// - Use at the start of Rep.. (repeat loop) to Break out of the loop <br />
-        /// - Or at the start of any Opt (optional) sequence to skip the remainder of the sequence
+        /// Define a set of Sequences, where it fails if any sequence passes (inverse of OneOf):<br/>
+        /// - Typically used at the beginning of Rep(eat) loops to break out of the loop.<br/>
+        /// - Or at the start of any Opt (optional) sequence to skip the remainder of the sequence.<br/>
+        /// - Execution short circuits if any sequence succeeds.<br/>
+        /// - If any of the sequences pass then the production fails.
         /// </summary>
-        /// <param name="buildFex"></param>
-        /// <returns>False if one of the sequences pass else True</returns>
         public FexBuilder<T> NotOneOf(Action<FexBuilder<T>> buildFex) => AddAndBuild(buildFex, new FexNotOneOf<T>());
 
         /// <summary>
-        /// Alias for NotOneOf - just makes it easier to read in repeat loops
-        /// Inverse of OneOf, where it fails if any sequence passes<br />
-        /// - Use at the start of Rep.. (repeat loop) to Break out of the loop <br />
-        /// - Or at the start of any Opt (optional) sequence to skip the remainder of the sequence
+        /// Alias for NotOneOf - just makes it easier to read in repeat loops.<br/><br/>
+        /// Define a set of Sequences, where it fails if any sequence passes (inverse of OneOf):<br/>
+        /// - Typically used at the beginning of Rep(eat) loops to break out of the loop.<br/>
+        /// - Or at the start of any Opt (optional) sequence to skip the remainder of the sequence.<br/>
+        /// - Execution short circuits if any sequence succeeds.<br/>
+        /// - If any of the sequences pass then the production fails.
         /// </summary>
-        /// <param name="buildFex"></param>
-        /// <returns>False if one of the sequences pass else True</returns>
         public FexBuilder<T> BreakOn(Action<FexBuilder<T>> buildFex) => AddAndBuild(buildFex, new FexNotOneOf<T>());
 
         /// <summary>
-        /// Repeat a production repMin up to repMax times (-1 for any reps > repMin) (see documentation for details)
+        /// Defines a repeated sequence and the following rules apply:<br/>
+        /// - repMin = 0: Repeat 0 to repMax times.Treats the sequence as an optional(see Opt rules).<br/>
+        /// - repMin > 0: Must repeat at least repMin times.<br/>
+        /// - repMax = -1: Repeat repMin to N times.Treats the sequence, after repMin, as an optional (see Opt rules).<br/>
+        /// - repMax > 0: Repeat repMin to repMax times and then terminates the loop.
         /// </summary>
         public FexBuilder<T> Rep(int repMin, int repMax, Action<FexBuilder<T>> buildFex)
             => AddAndBuild(buildFex, new FexRepeat<T>(repMin, repMax), true);
 
         /// <summary>
-        /// Repeat sequence repeat times: Equivalent to Rep(repeat, repeat, buildFex)
+        /// Repeat a sequence repCount times - equivalent to Rep(repCount, repCount, buildFex):<br/>
+        /// - The sequence must repeat exactly repCount times else the production fails.
         /// </summary>
-        public FexBuilder<T> Rep(int repeat, Action<FexBuilder<T>> buildFex) => Rep(repeat, repeat, buildFex);
+        public FexBuilder<T> Rep(int repCount, Action<FexBuilder<T>> buildFex) => Rep(repCount, repCount, buildFex);
 
         /// <summary>
-        /// Repeat sequence 0 or more times: Equivalent to Rep(0, -1, buildFex)
+        /// Repeat sequence 0 or more times - equivalent to Rep(0, -1, buildFex):<br/>
+        /// - Treats the sequence as an optional.<br/>
+        /// - Keeps repeating the sequence until it fails.
         /// </summary>
         public FexBuilder<T> Rep0N(Action<FexBuilder<T>> buildFex) => Rep(0, -1, buildFex);
 
         /// <summary>
-        /// Repeat sequence 1 or more times: Equivalent to Rep(1, -1, buildFex)
+        /// Repeat sequence one or more times - equivalent to Rep(1, -1, buildFex):<br/>
+        /// - The sequence must succeed at least once else the production fails.<br/>
+        /// - Then keeps repeating the sequence until it fails.
         /// </summary>
         public FexBuilder<T> Rep1N(Action<FexBuilder<T>> buildFex) => Rep(1, -1, buildFex);
 
         /// <summary>
-        /// Repeat a OneOf construct repMin up to repMax times (-1 for any reps > repMin) (see documentation for details)
+        /// Repeat a OneOf expression and the following rules apply:<br/>
+        /// - repMin = 0: Repeat 0 to repMax times. Treats the OneOf as an optional(see Opt rules).<br/>
+        /// - repMin > 0: Must repeat at least repMin times.<br/>
+        /// - repMax = -1: Repeat repMin to N times.Treats the OneOf, after repMin, as an optional (see Opt rules).<br/>
+        /// - repMax > 0: Repeat repMin to repMax times and then terminates the loop.
         /// </summary>
         public FexBuilder<T> RepOneOf(int repMin, int repMax, Action<FexBuilder<T>> buildFex)
             => Rep(repMin, repMax, r => r.OneOf(buildFex));
 
         /// <summary>
-        /// Action to perform if a production fails:<br/>
-        /// o Valid after an Op, OneOf or Rep, else it is ignored
+        /// Action to perform if the last Op (or derivative), Rep or OneOf failed:<br/>
+        /// - Typically used for error reporting.<br/>
+        /// - Valid only after an Op, OneOf or Rep, else it is ignored.<br/>
+        /// - Invoked only if the last Op, Rep or OneOf failed.<br/>
         /// </summary>
         public FexBuilder<T> OnFail(Action<T> failAction) {
             _buildState.LastFex?.SetFailAction(failAction);
@@ -206,19 +232,26 @@ namespace Psw.FlowExpressions
         }
 
         /// <summary>
-        /// Force a Fail Operation - can use as last operation in a OneOf set
+        /// Force a fail condition and performs the failAction.
         /// </summary>
         public FexBuilder<T> Fail(Action<T> failAction) => AddFex(new FexFail<T>(failAction));
 
         /// <summary>
-        /// Perform an action on the value of the last Operator, if the value is not null<br/>
-        /// o The value must be cast to the appropriate type
+        /// Binds an Action to an operator (Op) that recorded a value, and should follow directly after the Op:<br/>
+        /// - If the Op succeeds, and has a non-null value, then valueAction is invoked.<br/>
+        /// - The value is recorded as an object and must be cast to the actual type before use (via V, or it may be inferred from the action).
         /// </summary>
         public FexBuilder<T> ActValue<V>(Action<V> valueAction) {
             if (valueAction != null) _buildState.LastOpr?.SetValueAction(o => valueAction((V)o));
             return this;
         }
 
+        /// <summary>
+        /// Binds a pre-operator to all subsequent operators:<br/>
+        /// - A pre-operator executes before an operator as an action on the context:<br/>
+        /// - Typically used to skip spaces etc. before tokens when parsing.<br/>
+        /// - Pre-operators are efficient an only execute once while trying several lookahead operations.
+        /// </summary>
         public FexBuilder<T> GlobalPreOp(Action<T> preOp) {
             _buildState.PreOp.SetAction(preOp);
             return this;
@@ -226,37 +259,49 @@ namespace Psw.FlowExpressions
 
 
         /// <summary>
-        /// Set/override the PreOp for the preceding Op
+        /// Bind a pre-operator to the preceding operator:<br/>
+        /// - A pre-operator executes before an operator as an action on the context.<br/>
+        /// - Typically used to skip spaces etc. before tokens when parsing.<br/>
+        /// - Pre-operators are efficient an only execute once while trying several lookahead operations.<br/>
+        /// - The preOp may be null if no PreOp should be executed.<br/>
+        /// - The above mechanism could be used to switch off the GlobalPreOp's for selected Op's.
         /// </summary>
         public FexBuilder<T> PreOp(Action<T> preOp) {
             _buildState.LastOpr?.SetPreOp(new FexPreOp<T>(preOp));
             return this;
         }
 
-        protected bool _traceOn = true;
-
         /// <summary>
-        /// Switch Tracing on or off
+        /// Produce a general Trace message via the context and assign an optional level:<br/>
+        /// - Note: Enable tracing by passing an IFexTracer to the FlowExpression constructor, else this has no effect.<br/>
+        /// - Calls: `IFexTracer.Trace(traceMessage, level)`
         /// </summary>
-        public FexBuilder<T> TraceOn(bool on = true) {
-            _traceOn = on;
+        public FexBuilder<T> Trace(Func<T, string> traceMessage, int level = 0) {
+            if (_buildState.TraceOn) AddFex(new FexAct<T>(c => _buildState.Tracer.Trace(traceMessage(c), level)));
             return this;
         }
 
         /// <summary>
-        /// Trace Action to perform on last Op
+        /// Bind a Trace message to the preceding operator:<br/>
+        /// - Produce a Trace message via the context and assign an optional level.<br/>
+        /// - Note: Enable tracing by passing an IFexTracer to the FlowExpression constructor, else this has no effect.<br/>
+        /// - Calls: `IFexTracer.Trace(traceMessage, pass, level)` where pass is the result of the preceding operator.
         /// </summary>
-        public FexBuilder<T> Trace(Action<T, bool> traceAction) {
-            if (_traceOn) _buildState.LastOpr?.SetTraceAction((c, v, r) => traceAction(c, r));
+        public FexBuilder<T> TraceOp(Func<T, string> traceMessage, int level = 0) {
+            if (_buildState.TraceOn) _buildState.LastOpr?.SetTraceAction((c, v, r) => _buildState.Tracer.Trace(traceMessage(c), r, level));
             return this;
         }
 
         /// <summary>
-        /// Trace Action to perform on last Op, including access to the Op's value
+        /// Bind a Trace message to the preceding operator that produces a value:<br/>
+        /// - Produce a Trace message via the context, value (as an object) and assign an optional level.<br/>
+        /// - Note: Enable tracing by passing an IFexTracer to the FlowExpression constructor, else this has no effect.<br/>
+        /// - Calls: `IFexTracer.Trace(traceMessage, pass, level)` where pass is the result of the preceding operator.
         /// </summary>
-        public FexBuilder<T> Trace(Action<T, object, bool> traceAction) {
-            if (_traceOn) _buildState.LastOpr?.SetTraceAction(traceAction);
+        public FexBuilder<T> TraceOp(Func<T, object, string> traceMessage, int level = 0) {
+            if (_buildState.TraceOn) _buildState.LastOpr?.SetTraceAction((c, v, r) => _buildState.Tracer.Trace(traceMessage(c, v), r, level));
             return this;
         }
+
     }
 }

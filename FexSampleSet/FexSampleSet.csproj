@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="FexBuilderExt.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Psw.FlowExpressions\Psw.FlowExpressions.csproj" />
   </ItemGroup>
 

@@ -12,9 +12,13 @@ Flow expressions are constructed from the various **FexElements** (*building blo
 
 ## FexElements perform several types of functions:
 
-> Please see the [Fex Element reference](Docs/FexElementsRef.md) section for full details.<br>
-> Also [FexScanner context extensions](Docs/FexScannerExt.md) for extensions specific to the FexScanner as context.
+| Detailed References: |
+| :------------------- |
+| [Fex Element reference](Docs/FexElementsRef.md): describes each FexElement type with examples. |
+| [FexScanner context extensions](Docs/FexScannerExt.md): describes all the context extensions for the supplied FexScanner. |
+| [Custom Scanner](Docs/CustomScanner.md): a tutorial/example of a custom scanner and context extensions. |
 
+### FexElement Types:
 - **Operators (Op):** Perform a operation on the context, returning a success status (true/false). 
     - An operator is implemented via a `Func<context, bool>` delegate which can either operate on the context and/or the *closure* environment.
     - For example: if the context is a scanner then the Op would typically perform one of the scanning methods/functions.
@@ -24,7 +28,7 @@ Flow expressions are constructed from the various **FexElements** (*building blo
 - **Sequence(Seq):** A sequence is the primary construct used in flow expressions and defines a series of steps (1..n) to complete: 
     - A step is any FexElement.
     - All steps is a sequence must complete else the sequence fails.
-    - A step(s) may be optional and there are several rules governing this (see reference section).
+    - Steps may be optional and there are several rules governing this (see reference section).
 - **Flow Control:** These elements control the flow of an expression:
     - Opt: Optional sequence.
     - OneOf: One of a set of sequences must pass.
@@ -48,18 +52,16 @@ using Psw.FlowExpressions;
 
 void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
 {
-    /*
-     * Expression Grammar:
-     * expression => factor ( ( '-' | '+' ) factor )* ;
-     * factor     => unary ( ( '/' | '*' ) unary )* ;
-     * unary      => ( '-'  unary ) | primary ;
-     * primary    => NUMBER | "(" expression ")" ;
-    */
+    // Expression Grammar:
+    //   expression => factor ( ( '-' | '+' ) factor )* ;
+    //   factor     => unary ( ( '/' | '*' ) unary )* ;
+    //   unary      => ( '-'  unary ) | primary ;
+    //   primary    => NUMBER | "(" expression ")" ;
 
     // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
 
-    // The FlowExpression object used to create FexElements with FexScanner as the context:
+    // The FlowExpression factory used to create FexElements with FexScanner as the context:
     var fex = new FlowExpression<FexScanner>();
 
     // Define the main expression production, which returns a Sequence element:
@@ -92,7 +94,7 @@ void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
             .Seq(s => s.Ch('*').Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
 
             // If we have a '/' run unary, check for division by zero and then divide the top two values on the stack:
-            // Note again the stack is in reverse order.
+            // o Note again the stack is in reverse order.
             .Seq(s => s.Ch('/').Ref("unary")
                        .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0 and report as error.
                        .Act(c => numStack.Push(1 / numStack.Pop() * numStack.Pop())))
@@ -143,10 +145,67 @@ void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
     var scn = new FexScanner(calc);
 
     // Run the Axiom with the scanner which returns true/false:
-    // o If valid display the answer = top value on the stack.
+    // o If valid display the answer (= top value on the stack).
     // o Else display the error logged in the scanner's shared ErrorLog.
     Console.WriteLine(exprEval.Run(scn)
         ? $"Answer = {numStack.Pop():F4}"
         : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
+```
+
+### Sequence chart:
+```mermaid
+graph LR
+  subgraph "Seq (Sequence)" 
+    direction LR
+    A[Step 1] --> B[Step 2] -.-> C[Step n];
+  end
+```
+
+### Opt(ional) chart:
+```mermaid
+graph LR
+  subgraph "Opt (Optional)" 
+    A[Seq]
+  end
+```
+
+### One of chart:
+```mermaid
+graph LR
+  subgraph OneOf
+    direction LR
+    A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
+  end
+```
+
+### Opt One of chart:
+```mermaid
+graph LR
+  subgraph "Opt (Optional)" 
+    subgraph OneOf
+      direction LR
+      A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
+    end
+  end
+```
+
+### Repeat:
+```mermaid
+graph LR
+  subgraph "Rep (Repeat: min, max)"
+    direction LR
+    A[Seq];
+  end
+```
+
+### RepeatOneOf:
+```mermaid
+graph LR
+  subgraph "Rep (Repeat: min, max)"
+    subgraph OneOf
+      direction LR
+      A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
+  end
+  end
 ```

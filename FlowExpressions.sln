@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		LICENSE.txt = LICENSE.txt
 		README.md = README.md
+		Release Backlog.md = Release Backlog.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FexSampleSet", "FexSampleSet\FexSampleSet.csproj", "{8136AD86-0F27-4A2D-A7E4-9487EE62864D}"
@@ -15,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{16EDBBE2-1
 	ProjectSection(SolutionItems) = preProject
 		Docs\CustomScanner.md = Docs\CustomScanner.md
 		Docs\FexElementsRef.md = Docs\FexElementsRef.md
+		FexGraphs.md = FexGraphs.md
 		Docs\FexOverview.md = Docs\FexOverview.md
 		Docs\FexScannerExt.md = Docs\FexScannerExt.md
 	EndProjectSection

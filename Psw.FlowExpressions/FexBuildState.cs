@@ -20,6 +20,9 @@ namespace Psw.FlowExpressions
         public FexPreOp<T> PreOp = new FexPreOp<T>(null);  // Will be added to every Op - use for e.g to skip spaces
         public Dictionary<string, FexRef<T>> RefSet = new Dictionary<string, FexRef<T>>();
 
+        public IFexTracer Tracer = null;
+        public bool TraceOn => Tracer != null;
+
         public FexElement<T> Production(FexBuilder<T> builder, FexElement<T> prod, Action<FexBuilder<T>> build) {
             HostFex = prod;
             build?.Invoke(builder);

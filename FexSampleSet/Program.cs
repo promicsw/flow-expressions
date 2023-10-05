@@ -7,6 +7,7 @@ using FexExampleSet;
 using Psw.FlowExpressions;
 
 RunSamplesFex();
+//TraceExpressionEval();
 
 //ExpressionEval();
 //ExpressionEval("5");
@@ -196,6 +197,61 @@ void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
         : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
 
+// Expression Evaluation - using FexParser
+void TraceExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
+
+    /*
+     * Expression Grammar:
+     * expression => factor ( ( '-' | '+' ) factor )* ;
+     * factor     => unary ( ( '/' | '*' ) unary )* ;
+     * unary      => ( '-'  unary ) | primary ;
+     * primary    => NUMBER | "(" expression ")" ;
+    */
+
+    // Number Stack for calculations:
+    Stack<double> numStack = new Stack<double>();
+
+    Console.WriteLine($"Calculate: {calc}");
+
+    var fex = new FlowExpression<FexScanner>(new ConsoleTracer());
+
+    var expr = fex.Seq(s => s.Trace(c => "expr:")
+        .Ref("factor")
+        .RepOneOf(0, -1, r => r.Trace(c => "Expr +,-")
+            .Seq(s => s.Ch('+').TraceOp(c => "Check for +", 1).Ref("factor").Act(c => numStack.Push(numStack.Pop() + numStack.Pop())))
+            .Seq(s => s.Ch('-').TraceOp(c => "Check for -", 1).Ref("factor").Act(c => numStack.Push(-numStack.Pop() + numStack.Pop())))
+         ));
+
+    var factor = fex.Seq(s => s.RefName("factor").Trace(c => "factor:")
+        .Ref("unary")
+        .RepOneOf(0, -1, r => r.Trace(c => "Factor *,/")
+            .Seq(s => s.Ch('*').TraceOp(c => "Check for *", 1).Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
+            .Seq(s => s.Ch('/').TraceOp(c => "Check for /", 1).Ref("unary")
+                       .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0
+                       .Act(c => numStack.Push(1 / numStack.Pop() * numStack.Pop())))
+         ));
+
+    var unary = fex.Seq(s => s.RefName("unary").Trace(c => "unary:")
+        .OneOf(o => o
+            .Seq(s => s.Ch('-').TraceOp(c => "  negate unary").Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
+            .Ref("primary")
+         ));
+
+    var primary = fex.Seq(s => s.RefName("primary").Trace(c => "primary:")
+        .OneOf(o => o
+            .Seq(e => e.Ch('(').TraceOp(c => "Primary nesting (", 1).Fex(expr).Ch(')').OnFail(") expected"))
+            .Seq(s => s.NumDecimal(n => numStack.Push(n)).TraceOp((c, v) => $"Primary Number {(double)v}", 1))
+         ).OnFail("Primary expected"));
+
+    var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
+
+    var scn = new FexScanner(calc);
+
+    Console.WriteLine(exprEval.Run(scn)
+        ? $"Answer = {numStack.Pop():F4}"
+        : scn.ErrorLog.AsConsoleError("Expression Error:"));
+}
+
 void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
 {
     /*
@@ -209,7 +265,7 @@ void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
     // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
 
-    // The FlowExpression object used to create FexElements with FexScanner as the context:
+    // The FlowExpression factory used to create FexElements with FexScanner as the context:
     var fex = new FlowExpression<FexScanner>();
 
     // Define the main expression production, which returns a Sequence element:
@@ -242,7 +298,7 @@ void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
             .Seq(s => s.Ch('*').Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
 
             // If we have a '/' run unary, check for division by zero and then divide the top two values on the stack:
-            // Note again the stack is in reverse order.
+            // o Note again the stack is in reverse order.
             .Seq(s => s.Ch('/').Ref("unary")
                        .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0 and report as error.
                        .Act(c => numStack.Push(1 / numStack.Pop() * numStack.Pop())))
@@ -293,7 +349,7 @@ void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
     var scn = new FexScanner(calc);
 
     // Run the Axiom with the scanner which returns true/false:
-    // o If valid display the answer = top value on the stack.
+    // o If valid display the answer (= top value on the stack).
     // o Else display the error logged in the scanner's shared ErrorLog.
     Console.WriteLine(exprEval.Run(scn)
         ? $"Answer = {numStack.Pop():F4}"
@@ -370,6 +426,21 @@ public class Sample
     public Sample(string name, Action action) {
         Name = name;
         Run = action;
+    }
+}
+
+public class ConsoleTracer : IFexTracer
+{
+    public void Trace(string message, int level) {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"{new String(' ', level * 2)}{message}");
+        Console.ForegroundColor = ConsoleColor.White;
+    }
+
+    public void Trace(string message, bool pass, int level) {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"{new String(' ', level * 2)}{message} [{pass}]");
+        Console.ForegroundColor = ConsoleColor.White;
     }
 }
 
