@@ -4,12 +4,12 @@
 
 - [x] FexBuilder code comments.
 - [x] FlowExpression code comments.
-- [ ] FexScannerExt code comments:
-  - [ ] Plus reference to ScriptScanner docs
-- [ ] Custom Scanner md.
+- [x] FexScannerExt code comments:
+  - [x] Plus reference to ScriptScanner docs
+- [x] Custom Scanner md.
 - [x] FexElementsRef md.
-  - [ ] Order by function group.
-- [ ] FexOverview md.
-- [ ] FexScannerExt md.
-- [ ] ReadMe md.
+  - [x] Order by function group.
+- [x] FexOverview md.
+- [x] FexScannerExt md.
+- [x] ReadMe md.
 - [ ] Nuget doc.

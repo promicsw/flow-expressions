@@ -143,15 +143,13 @@ void DemoSimpleScanner() {
 }
 
 // Expression Evaluation - using FexParser
-void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
-
-    /*
-     * Expression Grammar:
-     * expression => factor ( ( '-' | '+' ) factor )* ;
-     * factor     => unary ( ( '/' | '*' ) unary )* ;
-     * unary      => ( '-'  unary ) | primary ;
-     * primary    => NUMBER | "(" expression ")" ;
-    */
+void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
+{
+    // Expression Grammar:
+    //   expr    => factor ( ( '-' | '+' ) factor )* ;
+    //   factor  => unary ( ( '/' | '*' ) unary )* ;
+    //   unary   => ( '-'  unary ) | primary ;
+    //   primary => NUMBER | '(' expression ')' ;
 
     // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
@@ -198,15 +196,13 @@ void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
 }
 
 // Expression Evaluation - using FexParser
-void TraceExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
-
-    /*
-     * Expression Grammar:
-     * expression => factor ( ( '-' | '+' ) factor )* ;
-     * factor     => unary ( ( '/' | '*' ) unary )* ;
-     * unary      => ( '-'  unary ) | primary ;
-     * primary    => NUMBER | "(" expression ")" ;
-    */
+void TraceExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
+{
+    // Expression Grammar:
+    //   expr    => factor ( ( '-' | '+' ) factor )* ;
+    //   factor  => unary ( ( '/' | '*' ) unary )* ;
+    //   unary   => ( '-'  unary ) | primary ;
+    //   primary => NUMBER | '(' expression ')' ;
 
     // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
@@ -254,13 +250,11 @@ void TraceExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") {
 
 void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
 {
-    /*
-     * Expression Grammar:
-     * expression => factor ( ( '-' | '+' ) factor )* ;
-     * factor     => unary ( ( '/' | '*' ) unary )* ;
-     * unary      => ( '-'  unary ) | primary ;
-     * primary    => NUMBER | "(" expression ")" ;
-    */
+    // Expression Grammar:
+    //   expr    => factor ( ( '-' | '+' ) factor )* ;
+    //   factor  => unary ( ( '/' | '*' ) unary )* ;
+    //   unary   => ( '-'  unary ) | primary ;
+    //   primary => NUMBER | '(' expression ')' ;
 
     // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();

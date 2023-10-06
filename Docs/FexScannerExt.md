@@ -20,7 +20,7 @@ public static FexBuilder<T> Ch<T>(this FexBuilder<T> exp, char ch) where T : Fex
 
 | Extensions | Description |
 | :---- | :------ |
-| ***Token operations:*** |  |
+| ***Token Actions:*** |  |
 | ``E:  ActStripToken(Action<string> actToken)`` | Perform an Action (Act) with the current Token stripped of all comments.<br/> |
 | ``E:  ActToken(Action<string> actToken)`` | Perform an Action (Act) with the current Token.<br/> |
 | ``E:  ActTrimStripToken(Action<string> actToken)`` | Perform an Action (Act) with the current Token trimmed and stripped of all comments.<br/> |

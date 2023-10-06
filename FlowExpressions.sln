@@ -15,8 +15,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{16EDBBE2-1A39-49BD-BB7D-1E8B7E9A8BB6}"
 	ProjectSection(SolutionItems) = preProject
 		Docs\CustomScanner.md = Docs\CustomScanner.md
-		Docs\FexElementsRef.md = Docs\FexElementsRef.md
 		FexGraphs.md = FexGraphs.md
+		Docs\FexElementsRef.md = Docs\FexElementsRef.md
 		Docs\FexOverview.md = Docs\FexOverview.md
 		Docs\FexScannerExt.md = Docs\FexScannerExt.md
 	EndProjectSection

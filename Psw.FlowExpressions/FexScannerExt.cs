@@ -33,7 +33,7 @@ namespace Psw.FlowExpressions
     {
         // Token Operations ===================================================
 
-        /// <sgroup>Token operations</sgroup>
+        /// <sgroup>Token Actions</sgroup>
         /// <summary>
         /// Perform an Action (Act) with the current Token.
         /// </summary>

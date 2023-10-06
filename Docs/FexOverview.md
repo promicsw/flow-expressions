@@ -12,11 +12,11 @@ Flow expressions are constructed from the various **FexElements** (*building blo
 
 ## FexElements perform several types of functions:
 
-| Detailed References: |
-| :------------------- |
-| [Fex Element reference](Docs/FexElementsRef.md): describes each FexElement type with examples. |
-| [FexScanner context extensions](Docs/FexScannerExt.md): describes all the context extensions for the supplied FexScanner. |
-| [Custom Scanner](Docs/CustomScanner.md): a tutorial/example of a custom scanner and context extensions. |
+| Detailed Reference | Brief |
+| :------------------ | :---- |
+| [Fex Element reference](Docs/FexElementsRef.md) | Reference for each FexElement type with examples. |
+| [FexScanner context extensions](Docs/FexScannerExt.md) |Reference of all the context extensions for the supplied FexScanner. |
+| [Custom Scanner](Docs/CustomScanner.md) | A tutorial/example of a custom scanner and context extensions. |
 
 ### FexElement Types:
 - **Operators (Op):** Perform a operation on the context, returning a success status (true/false). 
@@ -53,10 +53,10 @@ using Psw.FlowExpressions;
 void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
 {
     // Expression Grammar:
-    //   expression => factor ( ( '-' | '+' ) factor )* ;
-    //   factor     => unary ( ( '/' | '*' ) unary )* ;
-    //   unary      => ( '-'  unary ) | primary ;
-    //   primary    => NUMBER | "(" expression ")" ;
+    //   expr    => factor ( ( '-' | '+' ) factor )* ;
+    //   factor  => unary ( ( '/' | '*' ) unary )* ;
+    //   unary   => ( '-'  unary ) | primary ;
+    //   primary => NUMBER | '(' expression ')' ;
 
     // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
@@ -151,61 +151,4 @@ void RefExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
         ? $"Answer = {numStack.Pop():F4}"
         : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
-```
-
-### Sequence chart:
-```mermaid
-graph LR
-  subgraph "Seq (Sequence)" 
-    direction LR
-    A[Step 1] --> B[Step 2] -.-> C[Step n];
-  end
-```
-
-### Opt(ional) chart:
-```mermaid
-graph LR
-  subgraph "Opt (Optional)" 
-    A[Seq]
-  end
-```
-
-### One of chart:
-```mermaid
-graph LR
-  subgraph OneOf
-    direction LR
-    A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
-  end
-```
-
-### Opt One of chart:
-```mermaid
-graph LR
-  subgraph "Opt (Optional)" 
-    subgraph OneOf
-      direction LR
-      A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
-    end
-  end
-```
-
-### Repeat:
-```mermaid
-graph LR
-  subgraph "Rep (Repeat: min, max)"
-    direction LR
-    A[Seq];
-  end
-```
-
-### RepeatOneOf:
-```mermaid
-graph LR
-  subgraph "Rep (Repeat: min, max)"
-    subgraph OneOf
-      direction LR
-      A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
-  end
-  end
 ```

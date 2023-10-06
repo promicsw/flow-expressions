@@ -1,6 +1,3 @@
-
-
-<a id="id-toc"></a>
 # Fex Element Reference
 
 Flow Expressions are defined by a structure of *FexElements* built via a Fluent API. This defines the logical flow and operations of the flow expression in a very readable format closely resembling a flow *grammar*:
@@ -39,12 +36,17 @@ mechanism with methods of the following basic form:
 > - The details of each element type are documented below.
 > - **Note:** Only elements marked with an Astrix * may be constructed via the FlowExpression factory.
 
+
+<a id="id-toc"></a>
+
 | Fex Element | Brief |
 | :---------- | :---- |
 | [`Seq(s => s...)*`](#id-seq) | **Sequence:** Series of steps that must complete in full in order to pass. |
+| **Operators:** | *Perform an operation on the context producing a boolean result.<br> (see also [FexScanner operator extensions](Docs/FexScannerExt.md) when using FexScanner as the context)*  |
 | [`Op(Func<Ctx, bool> op)`](#id-op) | **Operator:** Perform an operation on the Context returning a boolean result. |
 | [`ValidOp(Action<Ctx> action)`](#id-validop) | **Always valid operator:** Perform and operation on the Context and always returns true. |
-| [`ActValue<V>(Action<V> valueAction)`](#id-value) | **Value Action:** Bind and action to an operator that records a value. |
+| [`GlobalPreOp(Action<Ctx> preOp)`<br/>`PreOp(Action<T> preOp)`](#id-preop) | **Pre-Operators:** Attach pre-operations to operators. |
+| **Flow Control:** | *These elements control the flow of an expression.* |
 | [`Opt(o => o...)*` ](#id-opt) | **Optional:** Optional sequence. |
 | [`OneOf(o => o...)*`](#id-oneof) | **One Of:** Set of sequences that are *Or'd* together and one of them must succeed to pass. |
 | [`OptOneOf(o => o...)`*](#id-optoneof) | **Optional One Of:** Optionally perform a OneOf. |
@@ -52,33 +54,39 @@ mechanism with methods of the following basic form:
 | [`BreakOn(o => o...)`](#id-notoneof) | **Alias for NotOneOf:** Reads better in loops. |
 | [`Rep(repMin, repMax, r => r...)*`<br/>`Rep(count, r => r...)*`<br/>`Rep0N(r => r...)*`<br/>`Rep1N(r => r...)`*](#id-rep) | **Repeat:** Repeated sequences. |
 | [`RepOneOf(repMin, repMax, r => r...)`*](#id-reponeof) | **Repeat One Of:** Repeated a OneOf expression. |
-| [`Fex(FexElement1, FexElement2, ...)`](#id-fex) | **Include FexElements:** Include a set of previously defined FexElements. |
+| **Actions:** | *Perform actions based on the current state of a production.<br> (see also [FexScanner action extensions](Docs/FexScannerExt.md) when using FexScanner as the context)*  |
 | [`Act(Action<Ctx> action)`](#id-act) | **Action:** Perform any external Action based on the current state of the production. |
+| [`ActValue<V>(Action<V> valueAction)`](#id-value) | **Value Action:** Bind and action to an operator that records a value. |
 | [`RepAct(int repeat, Action<Ctx, int> action)`](#id-repact) | **Repeat Action:** Perform any external repeated Action based on the current state of the production. |
+| **Error Handling:** | |
 | [`OnFail(Action<Ctx> failAction)`](#id-onfail) | **Fail Action:**  Perform an Action if the last operator or production failed. |
 | [`Fail(Action<Ctx> failAction)`](#id-fail) | **Force Fail Action:** Force a failure and perform an Action. |
 | [`Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`](#id-assert) | **Assert** if a condition is true else performs failAction. |
+| **Inclusion, Forward referencing and Recursion:** | |
+| [`Fex(FexElement1, FexElement2, ...)`](#id-fex) | **Include FexElements:** Include a set of previously defined FexElements. |
 | [`RefName(string name),  Ref(string refName)`](#id-ref) | Forward Referencing and inclusion.|
 | [`OptSelf()`](#id-optself) | Optional recursive inclusion of the current production sequence within itself. |
-| [`GlobalPreOp(Action<Ctx> preOp)`<br/>`PreOp(Action<T> preOp)`](#id-preop) | **Pre-Operators:** Attach pre-operations to operators. |
+| **Tracing:** | *Debugging aid.* |
 | [`Trace(Func<Ctx, string> traceMessage, int level = 0)`<br/>`TraceOp(Func<Ctx, string> traceMessage, int level = 0)`<br/>`TraceOp(Func<Ctx, object, string> traceMessage, int level)`](#id-trace) | Tracing utilities. |
 
 ---
 <a id="id-seq"></a>
 ### `Sequence: Seq(s => s...)`
-```mermaid
-graph LR
-  subgraph "Seq (Sequence)" 
-    direction LR
-    A[FexElement 1] --> B[FexElement 2] -.-> C[FexElement n];
-  end
-```
+
 A Sequence defines a series of steps that must complete in full in order to pass. Sequences are the primary building structures of flow expressions:
 
 - A sequence consists of one or more FexElements.
 - All steps in a sequence must succeed for the sequence to pass.
 - *Action* FexElements don't affect the validity of a sequence.
 - Steps in the sequence may be optional (see Opt...) and these also don't affect the validity of a sequence.
+
+```mermaid
+graph LR
+  subgraph "Seq" 
+    direction LR
+    A[FexElement 1] --> B[FexElement 2] -.-> C[FexElement n];
+  end
+```
 
 The following is a simple example of sequences.
 
@@ -158,26 +166,27 @@ OneOf(o => o
 [`TOC`](#id-toc)
 
 ---
-<a id="id-value"></a>
-### `Value Action: ActValue<V>(Action<V> valueAction)`
+<a id="id-preop"></a>
+### Pre-Operators:
 
-This binds an Action to an operator (Op) that recorded a value, and should follow directly after the Op:
+Pre-operators execute before an Op (operator) as and Action on the context: 
+- Typically used to skip spaces, comments and newlines etc. before tokens when parsing scripts. 
+- Pre-operators are efficient an only execute once while trying several lookahead operations.
 
-- If the Op succeeds, and has a non-null value, then valueAction is invoked.
-- The value is recorded as an object and must be cast to the actual type before use (via V, or it may be inferred from the action).
-- Note that there a several other ways to do this:
-  - The Op could directly perform an operation on a value it produces.
-  - Context operator extensions may include a valueAction as part of the operator.
+<br/>
 
-```csharp
-var digits = "";
+> **`GlobalPreOp(Action<Ctx> preOp)`**  
+> - Binds a pre-operator to all subsequent operators.  
 
-// Basic form where Digit() records the digit character just read
-Rep(3, r => r.Digit().ActValue<char>(v => digits += v))
+<br/>
 
-// Context Operator Extension configured to operate on the value directly
-Rep(3, r => r.Digit(v => digits += v))
-```
+> **`PreOp(Action<Ctx> preOp)`**  
+> - Use directly after an operator to bind a pre-operator to the preceding operator:
+> - The preOp may be null if no PreOp should be executed.
+> - The above mechanism could be used to *switch off* the GlobalPreOp's for selected Op's.
+
+See the Expression example which uses a GlobalPreOp to skip all spaces before the *tokens*.
+
 [`TOC`](#id-toc)
 
 ---
@@ -191,6 +200,13 @@ Opt defines and optional sequence and the following rules apply:
 - Note: The first step(s) may themselves be optional and in this case the following applies:
   - If any of the leading optional steps or first non-optional step passes then the remainder must complete.
   - If the leading optional step(s) and the first non-optional fail then the sequence is aborted.
+
+```mermaid
+graph LR
+  subgraph "Opt" 
+    A[Seq]
+  end
+```
 
 ```csharp
 // Parses: (ab)? (c)? d
@@ -210,6 +226,14 @@ OneOf defines a set of sequences, where one of the sequences must succeed:
 
 - Execution *breaks out* at the point where it succeeds.
 - If none of the sequences pass then the production fails.
+
+```mermaid
+graph LR
+  subgraph OneOf
+    direction LR
+    A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
+  end
+```
  
  Some examples from the *expression parser* below:
 
@@ -238,6 +262,14 @@ Define an optional set of sequences where one of them may pass:
 - Same as OneOf but does not fail if no sequence passes.
  - Execution *breaks out* at the point where it does succeeds.
 
+```mermaid
+graph LR
+  subgraph OptOneOf
+    direction LR
+    A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
+  end
+```
+
 ```csharp
 OptOneOf(o => o
     .Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
@@ -256,6 +288,16 @@ Define a set of Sequences, where it fails if any sequence passes (inverse of One
 - Execution *short circuits* if any sequence succeeds.<br/>
 - If any of the sequences pass then the production fails.
 - `BreakOn(o => o...)` is an alias for NotOneOf that reads better in loops.
+
+```mermaid
+graph LR
+  subgraph NotOneOf
+    subgraph "Not!"
+      direction LR
+      A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
+    end
+  end
+```
 
  In the example below if any of the steps in the BreakOn sequence passes, then BreakOn/NotOneOf fails and the loop is terminated because it was the first step in the Rep inner-sequence (see Rep rules).
 
@@ -290,6 +332,14 @@ For convenience, several Repeat configurations are available:
 - `Rep0N(r => r...) -> Rep(0, -1, r => r...)`
 - `Rep1N(r => r...) -> Rep(1, -1, r => r...)`
 
+```mermaid
+graph LR
+  subgraph "Rep (min, max)"
+    direction LR
+    A[Seq];
+  end
+```
+
 ```csharp
 Rep(3, -1, r => r.Ch('a').Ch('b'));
 Rep(3, 9, r => r.Ch('a').Ch('b');)
@@ -311,6 +361,14 @@ Repeat a OneOf construct and the following rules apply:
 - repMax = -1: Repeat repMin to N times.Treats the OneOf, after repMin, as an optional (see Opt rules).<br/>
 - repMax > 0: Repeat repMin to repMax times and then terminates the loop.
 
+```mermaid
+graph LR
+  subgraph "RepOneOf (min, max)"
+    direction LR
+    A[Seq 1] -->|or| B[Seq 2] -.->|or| C[Seq 3];
+  end
+```
+
 ```csharp
 RepOneOf(0, -1, r => r
     .Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
@@ -318,24 +376,6 @@ RepOneOf(0, -1, r => r
 );
 ```
 [`TOC`](#id-toc)
-
----
-<a id="id-fex"></a>
-### `Include FexElements: Fex(FexElement1, FexElement2, ...)`
-
-Include a set of previously defined FexElements (sub-expressions):
-
-- For complex expressions it may be easier to factorize out smaller sub-expressions which are then included to form the whole.
-- A common sub-expressions may also be reused in several places using Fex(...). 
-- In either case it makes the overall expression easier to read and maintain.
-
-```csharp
-var abSequence = fex.Seq(s => s.Ch('(') .Rep(3, r => r.Ch('a').Ch('b')) .Ch(')'));
-var cdSequence = fex.Seq(s => s.Ch('[') .Rep(3, r => r.Ch('c').Ch('d')) .Ch(']'));
-
-var fullSequence = fex.Seq(s => s.Ch('{').Fex(abSequence, cdSequence).Ch('}'));
-```
-[`toc`)](#id-toc)
 
 ---
 <a id="id-act"></a>
@@ -353,6 +393,29 @@ Seq(s => s.Ch('+').Ref("factor").Act(c => Calc((n1, n2) => n1 + n2)))
 
 // E.g. Negate the top stack value
 Seq(s => s.Ch('-').Ref("unary").Act(a => numStack.Push(-numStack.Pop())))
+```
+[`TOC`](#id-toc)
+
+---
+<a id="id-value"></a>
+### `Value Action: ActValue<V>(Action<V> valueAction)`
+
+This binds an Action to an operator (Op) that recorded a value, and should follow directly after the Op:
+
+- If the Op succeeds, and has a non-null value, then valueAction is invoked.
+- The value is recorded as an object and must be cast to the actual type before use (via V, or it may be inferred from the action).
+- Note that there a several other ways to do this:
+  - The Op could directly perform an operation on a value it produces.
+  - Context operator extensions may include a valueAction as part of the operator.
+
+```csharp
+var digits = "";
+
+// Basic form where Digit() records the digit character just read
+Rep(3, r => r.Digit().ActValue<char>(v => digits += v))
+
+// Context Operator Extension configured to operate on the value directly
+Rep(3, r => r.Digit(v => digits += v))
 ```
 [`TOC`](#id-toc)
 
@@ -426,6 +489,24 @@ Seq(s => s.Ch('/').Ref("unary")
 [`TOC`](#id-toc)
 
 ---
+<a id="id-fex"></a>
+### `Include FexElements: Fex(FexElement1, FexElement2, ...)`
+
+Include a set of previously defined FexElements (sub-expressions):
+
+- For complex expressions it may be easier to factorize out smaller sub-expressions which are then included to form the whole.
+- A common sub-expressions may also be reused in several places using Fex(...). 
+- In either case it makes the overall expression easier to read and maintain.
+
+```csharp
+var abSequence = fex.Seq(s => s.Ch('(') .Rep(3, r => r.Ch('a').Ch('b')) .Ch(')'));
+var cdSequence = fex.Seq(s => s.Ch('[') .Rep(3, r => r.Ch('c').Ch('d')) .Ch(']'));
+
+var fullSequence = fex.Seq(s => s.Ch('{').Fex(abSequence, cdSequence).Ch('}'));
+```
+[`toc`)](#id-toc)
+
+---
 <a id="id-ref"></a>
 ### `Forward Reference: RefName(string name),  Ref(string refName)`
 
@@ -466,32 +547,8 @@ Seq(s => s.Digit().OptSelf().IsEos());
 
 A Flow expressions implement recursion via Forward Referencing, OptSelf or Fex inclusion.
 
-> **Note** Flow Expressions do not support [*Left Recursion*](https://en.wikipedia.org/wiki/Left_recursion) (which will cause an endless loop and possibly a stack overflow)
+> **Note:** Flow Expressions do not support [*Left Recursion*](https://en.wikipedia.org/wiki/Left_recursion) (which will cause an endless loop and possibly a stack overflow)
 
-
-[`TOC`](#id-toc)
-
----
-<a id="id-preop"></a>
-### Pre-Operators:
-
-Pre-operators execute before an Op (operator) as and Action on the context: 
-- Typically used to skip spaces, comments and newlines etc. before tokens when parsing scripts. 
-- Pre-operators are efficient an only execute once while trying several lookahead operations.
-
-<br/>
-
-> **`GlobalPreOp(Action<Ctx> preOp)`**  
-> - Binds a pre-operator to all subsequent operators.  
-
-<br/>
-
-> **`PreOp(Action<Ctx> preOp)`**  
-> - Use directly after an operator to bind a pre-operator to the preceding operator:
-> - The preOp may be null if no PreOp should be executed.
-> - The above mechanism could be used to *switch off* the GlobalPreOp's for selected Op's.
-
-See the Expression example which uses a GlobalPreOp to skip all spaces before the *tokens*.
 
 [`TOC`](#id-toc)
 
@@ -561,7 +618,6 @@ public class ConsoleTracer : IFexTracer
 
 **Example usage of the above:**
 ```csharp
-
 // Enable tracing via an IFexTracer in the FlowExpression constructor.
 var fex = new FlowExpression<FexScanner>(new ConsoleTracer());
 
@@ -571,17 +627,17 @@ var after = fex.Seq(s => s.Trace(c => "try after sequence.")
         .Ch('c').OnFail("c expected")
     );
 
-// Example output: try after sequence.
+// Output: try after sequence.
 
 // Trace Op without value (since value is known):
 Ch('+').TraceOp(c => "Check for +") 
 
-// Example output: Check for + [False]
+// Output: Check for + [False]
 
 // Trace Op with value:
 AnyCh("+-", v => opStack.Push(v)).TraceOp((c, v) => $"AnyCh val: {v}") 
 
-// Example output: AnyCh val: + [True]
+// Output: AnyCh val: + [True]
 ```
 
 [`TOC`](#id-toc)

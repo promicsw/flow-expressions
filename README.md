@@ -26,13 +26,11 @@ The following example is a complete **Expression Parser**, including evaluation 
 ```csharp
 void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
 {
-    /*
-     * Expression Grammar:
-     * expression => factor ( ( '-' | '+' ) factor )* ;
-     * factor     => unary ( ( '/' | '*' ) unary )* ;
-     * unary      => ( '-'  unary ) | primary ;
-     * primary    => NUMBER | "(" expression ")" ;
-    */
+    // Expression Grammar:
+    //   expr    => factor ( ( '-' | '+' ) factor )* ;
+    //   factor  => unary ( ( '/' | '*' ) unary )* ;
+    //   unary   => ( '-'  unary ) | primary ;
+    //   primary => NUMBER | '(' expression ')' ;
 
     // Number Stack for calculations:
     Stack<double> numStack = new Stack<double>();
@@ -147,7 +145,7 @@ void QuickStart()
 
 Flow Expressions provide a novel mechanism of constructing parsers using a simple fluent syntax. 
 Having developed several programming languages and parsers in the past I came up with this idea as an experiment. 
-It think it turned out very well, and I find it far more functional and intuitive than say *Parser Combinators* and *PEG*, give it a try!
+It think it turned out very well, and find it far more functional and intuitive than say *Parser Combinators* and *PEG*, give it a try!
 
 > It actually makes parser construction quite fun as you can achieve a lot with a few lines of code, while the system does all the heavy lifting.
 >
