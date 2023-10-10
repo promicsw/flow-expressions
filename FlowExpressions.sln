@@ -6,8 +6,8 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C4B8C127-E46C-47AD-BFB4-7054372EC975}"
 	ProjectSection(SolutionItems) = preProject
 		LICENSE.txt = LICENSE.txt
+		Nuget\Nuget.md = Nuget\Nuget.md
 		README.md = README.md
-		Release Backlog.md = Release Backlog.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FexSampleSet", "FexSampleSet\FexSampleSet.csproj", "{8136AD86-0F27-4A2D-A7E4-9487EE62864D}"
@@ -15,8 +15,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{16EDBBE2-1A39-49BD-BB7D-1E8B7E9A8BB6}"
 	ProjectSection(SolutionItems) = preProject
 		Docs\CustomScanner.md = Docs\CustomScanner.md
-		FexGraphs.md = FexGraphs.md
 		Docs\FexElementsRef.md = Docs\FexElementsRef.md
+		Docs\FexGraphs.md = Docs\FexGraphs.md
 		Docs\FexOverview.md = Docs\FexOverview.md
 		Docs\FexScannerExt.md = Docs\FexScannerExt.md
 	EndProjectSection

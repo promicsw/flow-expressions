@@ -7,8 +7,26 @@ classDiagram
   FexElement <|-- Opt
   FexElement <|-- OneOf
   FexElement <|-- OptOneOf
+  FexElement <|-- NotOneOf
   FexElement <|-- Rep
   FexElement <|-- RepOneOf
+  FexElement <|-- Op
+  FexElement <|-- ValidOp
+  FexElement <|-- PreOp
+  FexElement <|-- GlobalPreOp
+  FexElement <|-- Act
+  FexElement <|-- ActValue
+  FexElement <|-- RepValue
+  FexElement <|-- OnFail
+  FexElement <|-- Fail
+  FexElement <|-- Assert
+  FexElement <|-- Fex
+  FexElement <|-- RefName
+  FexElement <|-- Ref
+  FexElement <|-- OptSelf
+  FexElement <|-- Trace
+  FexElement <|-- TraceOp
+
 ```
 
 ### Sequence:

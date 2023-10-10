@@ -64,7 +64,7 @@ mechanism with methods of the following basic form:
 | [`Assert(Func<Ctx, bool> assert, Action<Ctx> failAction)`](#id-assert) | **Assert** if a condition is true else performs failAction. |
 | **Inclusion, Forward referencing and Recursion:** | |
 | [`Fex(FexElement1, FexElement2, ...)`](#id-fex) | **Include FexElements:** Include a set of previously defined FexElements. |
-| [`RefName(string name),  Ref(string refName)`](#id-ref) | Forward Referencing and inclusion.|
+| [`RefName(string name)`<br>`Ref(string refName)`](#id-ref) | Forward Referencing and inclusion.|
 | [`OptSelf()`](#id-optself) | Optional recursive inclusion of the current production sequence within itself. |
 | **Tracing:** | *Debugging aid.* |
 | [`Trace(Func<Ctx, string> traceMessage, int level = 0)`<br/>`TraceOp(Func<Ctx, string> traceMessage, int level = 0)`<br/>`TraceOp(Func<Ctx, object, string> traceMessage, int level)`](#id-trace) | Tracing utilities. |
