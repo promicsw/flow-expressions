@@ -12,12 +12,13 @@
     <Copyright>2023 Promic Software</Copyright>
     <PackageProjectUrl>https://github.com/promicsw/flow-expressions</PackageProjectUrl>
     <RepositoryUrl>https://github.com/promicsw/flow-expressions</RepositoryUrl>
-    <PackageTags>parser;flow-logic;c#;</PackageTags>
+    <PackageTags>parser;parser builder;flow logic;c#;</PackageTags>
     <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>Nuget.md</PackageReadmeFile>
     <PackageOutputPath>d:\PromicSW_GitHub\LocalNuget\</PackageOutputPath>
+    <PackageIcon>PswLogo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\LocalNuget\Media\PswLogo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="..\Nuget\Nuget.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
