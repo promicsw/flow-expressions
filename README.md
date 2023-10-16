@@ -5,7 +5,7 @@ Construct, ready to run,  Parsers of any complexity using a declarative fluent s
 
 **Note:** This repo uses high performance scanners from the [Scanners](https://github.com/PromicSW/scanners) repo/library.
 
-[![Nuget](https://img.shields.io/nuget/v/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)
+[![Nuget](https://img.shields.io/nuget/v/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpressions/)
 <!--[![Nuget](https://img.shields.io/nuget/dt/Psw.FlowExpressions)](https://www.nuget.org/packages/Psw.FlowExpression/)-->
 
 ## Building Flow Expressions
