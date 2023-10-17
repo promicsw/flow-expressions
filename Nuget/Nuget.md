@@ -12,9 +12,9 @@ Any logic than can be expressed as a Flow Expression (think flow chart) may be i
 
 > A Flow Expression operates on a user supplied **Context**, which is any environment that manages and provides input/content/state.
 >
-> For a Parser, the context would be a **Scanner** that manages text scanning and provides <i>Tokens</i> to operate on. A comprehensive FexScanner is provided as the default - but you can roll your own if required. 
+> For a Parser, the context would be a **Scanner** that manages text scanning and provides *Tokens* to operate on. A comprehensive FexScanner is provided as the default - but you can roll your own if required. 
 
-<br>
+
 
 The following example is a complete **Expression Parser**, including evaluation and error reporting:
 
@@ -72,7 +72,7 @@ void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
 }
 ```
 
-<br>
+
 
 Example **error reporting** for the expression parser above:
 
