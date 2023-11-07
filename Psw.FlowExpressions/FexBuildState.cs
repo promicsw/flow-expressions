@@ -17,6 +17,7 @@ namespace Psw.FlowExpressions
         public FexElement<T>? HostFex;
         public FexElement<T>? LastFex;
         public FexOpr<T>? LastOpr;
+        public Action<T>? SkipOp;
         public FexPreOp<T> PreOp = new FexPreOp<T>(null);  // Will be added to every Op - use for e.g to skip spaces
         public Dictionary<string, FexRef<T>> RefSet = new Dictionary<string, FexRef<T>>();
 

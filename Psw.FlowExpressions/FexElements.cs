@@ -61,10 +61,10 @@ namespace Psw.FlowExpressions
     /// </summary>
     public class FexAct<T> : FexElement<T>
     {
-        private readonly Action<T> _action;
+        private readonly Action<T>? _action;
         private readonly FexCheckResult _checkRunReturn;
 
-        public FexAct(Action<T> action, FexCheckResult checkRunReturn = FexCheckResult.FailFirst) {
+        public FexAct(Action<T>? action, FexCheckResult checkRunReturn = FexCheckResult.FailFirst) {
             _action = action;
             _checkRunReturn = checkRunReturn;
             IsOpt = true;
@@ -173,6 +173,7 @@ namespace Psw.FlowExpressions
 
         public override FexCheckResult CheckRun(T ctx) => _Run(ctx, true) ? FexCheckResult.Passed : FexCheckResult.FailFirst;
     }
+
 
     /// <summary>
     /// Construct, Run and Manage a Sequence of steps (FexElements)

@@ -96,14 +96,17 @@ void QuickStart() {
      */
 
     var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner.
+        fex.DefSkip(c => c.SkipSp());            // Define the Skip operation to skip spaces.
+
     string dcode = "", acode = "", number = "";  // Will record values in here.
+
 
     // Build the flow expression with 'Axiom' tnumber:
     var tnumber = fex.Seq(s => s
         .Ch('(').OnFail("( expected")
         .Rep(3, -1, r => r.Digit(v => dcode += v)).OnFail("3+ digit dialing code expected")
         .Ch(')').OnFail(") expected")
-        .Sp()
+        .Skip() // Perform the previously defined skip operation
         .Rep(3, r => r.Digit(v => acode += v)).OnFail("3 digit area code expected")
         .AnyCh("- ").OnFail("- or space expected")
         .Rep(4, r => r.Digit(v => number += v)).OnFail("4 digit number expected")

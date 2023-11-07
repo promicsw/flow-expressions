@@ -36,6 +36,15 @@ namespace Psw.FlowExpressions
             => _fexBuildState.Production(_fexBuilder, prod, build);
 
         /// <summary>
+        /// Define the Skip action to perform for the Skip element:<br/>
+        /// - Typically used to skip spaces etc.
+        /// </summary>
+        public FlowExpression<T> DefSkip(Action<T> skipAction) {
+            _fexBuildState.SkipOp = skipAction;
+            return this;
+        }
+
+        /// <summary>
         /// Define a Sequence (of steps) that must complete in full to pass:<br/>
         /// - A step is any FexElement.
         /// </summary>
