@@ -247,11 +247,10 @@ namespace Psw.FlowExpressions
         }
 
         /// <summary>
-        /// Perform the previously defined (via FlowExpression.DefSkip(...)) skip operation:<br/>
-        /// - Typically used to skip spaces etc.<br/>
-        /// - Runs if defined and does no affect the validity of a sequence.
+        /// Perform the previously defined Skip action (define via FlowExpression.DefSkip(...)):<br/>
+        /// - Typically used to skip spaces/white-space etc.<br/>
+        /// - Runs, if defined, as an action and does no affect the validity of a sequence.
         /// </summary>
-        /// <returns></returns>
         public FexBuilder<T> Skip() => Act(_buildState.SkipOp);
 
 
@@ -267,12 +266,12 @@ namespace Psw.FlowExpressions
         }
 
         /// <summary>
-        /// Binds the previously defined (via FlowExpression.DefSkip(...)) skip operation as pre-operator to all subsequent operators:<br/>
+        /// Binds the previously defined Skip action (define via FlowExpression.DefSkip(...)) as pre-operator to all subsequent operators:<br/>
         /// - A pre-operator executes before an operator as an action on the context:<br/>
-        /// - Typically used to skip spaces etc. before tokens when parsing.<br/>
+        /// - Typically used to skip spaces/white-space etc. before tokens when parsing.<br/>
         /// - Pre-operators are efficient an only execute once while trying several lookahead operations.
         /// </summary>
-        public FexBuilder<T> SkipGlobalPreOp() => GlobalPreOp(_buildState.SkipOp);
+        public FexBuilder<T> GlobalSkip() => GlobalPreOp(_buildState.SkipOp);
 
 
         /// <summary>

@@ -12,13 +12,14 @@
     <Copyright>2023 Promic Software</Copyright>
     <PackageProjectUrl>https://github.com/promicsw/flow-expressions</PackageProjectUrl>
     <RepositoryUrl>https://github.com/promicsw/flow-expressions</RepositoryUrl>
-    <PackageTags>parser;parser builder;flow logic;c#;</PackageTags>
-    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+    <PackageTags>parser;parser-builder;flow-logic;c#;flow-expression;</PackageTags>
+    <PackageReleaseNotes>Skip feature added for common skipping actions during parsing.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>Nuget.md</PackageReadmeFile>
     <PackageOutputPath>d:\PromicSW_GitHub\LocalNuget\</PackageOutputPath>
     <PackageIcon>PswLogo.png</PackageIcon>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

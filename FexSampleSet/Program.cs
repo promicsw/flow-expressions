@@ -57,6 +57,7 @@ void RunSamplesFex() {
         new Sample("Simple Scanner 2 (valid)", () => SSDemo.DemoSimpleScanner2(" N3 N1N3-abc")),
         new Sample("Simple Scanner 2 (invalid)", () => SSDemo.DemoSimpleScanner2(" N3 N1N2-ac")),
         new Sample("Expression Eval", () => ExpressionEval()),
+        new Sample("Expression Eval (with tracing)", () => TraceExpressionEval()),
         new Sample("Expression REPL", () => ExpressionREPL()),
     };
 
@@ -96,7 +97,7 @@ void QuickStart() {
      */
 
     var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner.
-        fex.DefSkip(c => c.SkipSp());            // Define the Skip operation to skip spaces.
+        fex.DefSkip(c => c.SkipSp());            // Define a Skip operation to skip spaces.
 
     string dcode = "", acode = "", number = "";  // Will record values in here.
 
@@ -198,7 +199,7 @@ void ExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )")
         : scn.ErrorLog.AsConsoleError("Expression Error:"));
 }
 
-// Expression Evaluation - using FexParser
+// Expression Evaluation with Tracing example - using FexParser 
 void TraceExpressionEval(string calc = "9 - (5.5 + 3) * 6 - 4 / ( 9 - 1 )") 
 {
     // Expression Grammar:
@@ -426,6 +427,9 @@ public class Sample
     }
 }
 
+/// <summary>
+/// IFexTracer implementation for Console output
+/// </summary>
 public class ConsoleTracer : IFexTracer
 {
     public void Trace(string message, int level) {

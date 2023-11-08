@@ -8,7 +8,10 @@ Flow Expressions are defined by a structure of *FexElements* built via a Fluent 
 ## Factory: `FlowExpression<T>`
 
 The `FlowExpression<T>` class operates as a *factory* to build and return FexElements which are used in other productions or as the *Axiom* (root) to be run.
-> The innards of each element are built via the encapsulated `FexBuilder<T>` class.
+> - The innards of each element are built via the encapsulated `FexBuilder<T>` class.
+> - **`Skip()` feature:** Sometimes when parsing spaces/white-space/other needs to be skipped between tokens:
+>    - FexBuilder provides a common Skip() action that can be placed anywhere for this purpose.
+>    - FlowExpression has a method `DefSkip(Action<Ctx> skipAction)` to define what this skip action must be and must be defined before creating any elements.  
 
 **Basic mechanism:**
 ```csharp
@@ -16,12 +19,13 @@ using Psw.FlowExpressions;
 
 // Create a FlowEpression factory using FexScanner as the context:
 var fex = new FlowExpression<FexScanner>();
+    fex.DefSkip(Action<T> skipAction) // Optionally define the Skip action.
 
-// Create a sequence element (element is of type FexElement<T>):
+// Create a sequence element (returned element is of type FexElement<T>):
 var element = fex.Seq(Action<FexBuilder<T>> buildFex);
 
 // Run the element (axiom) with supplied context and process result.
-bool result = element.Run(new FexScanner("text to process"));
+bool result = element.Run(new FexScanner("text to parse"));
 
 // Handle pass or failure:
 ```
@@ -46,6 +50,7 @@ mechanism with methods of the following basic form:
 | [`Op(Func<Ctx, bool> op)`](#id-op) | **Operator:** Perform an operation on the Context returning a boolean result. |
 | [`ValidOp(Action<Ctx> action)`](#id-validop) | **Always valid operator:** Perform and operation on the Context and always returns true. |
 | [`GlobalPreOp(Action<Ctx> preOp)`<br/>`PreOp(Action<T> preOp)`](#id-preop) | **Pre-Operators:** Attach pre-operations to operators. |
+| [`Skip()`<br/>`GlobalSkip()`](#id-skip) | **Skip Action:** Perform a common Skip action previously defined via `FexScanner.DefSkip(...)`. |
 | **Flow Control:** | *These elements control the flow of an expression.* |
 | [`Opt(o => o...)*` ](#id-opt) | **Optional:** Optional sequence. |
 | [`OneOf(o => o...)*`](#id-oneof) | **One Of:** Set of sequences that are *Or'd* together and one of them must succeed to pass. |
@@ -186,6 +191,39 @@ Pre-operators execute before an Op (operator) as and Action on the context:
 > - The above mechanism could be used to *switch off* the GlobalPreOp's for selected Op's.
 
 See the Expression example which uses a GlobalPreOp to skip all spaces before the *tokens*.
+
+[`TOC`](#id-toc)
+
+---
+<a id="id-skip"></a>
+### Skip Actions: 
+
+Used when a common skipping action is required between tokens:
+- Typically used to skip spaces, comments and newlines etc. between tokens when parsing scripts. 
+- The action to perform must be pre-defined via `FexExpression.DefSkip(Action<Ctx> skipAction)` and must be defined before any other productions.
+- The Skip operation may be placed anywhere and runs as an action that does not affects the validity of a sequence. If no skip action is define it's just ignored.
+
+<br/>
+
+> **`GlobalSkip()`**  
+> - Sets the skip action as a GlobalPreOp.  
+
+```csharp
+var fex = new FlowExpression<FexScanner>();  // Flow Expression using FexScanner.
+    fex.DefSkip(c => c.SkipSp());            // Define a Skip operation to skip spaces.
+string dcode = "", acode = "", number = "";  // Will record values in here.
+
+// Build the flow expression with 'Axiom' tnumber:
+var tnumber = fex.Seq(s => s
+    .Ch('(').OnFail("( expected")
+    .Rep(3, -1, r => r.Digit(v => dcode += v)).OnFail("3+ digit dialing code expected")
+    .Ch(')').OnFail(") expected")
+    .Skip() // Perform the previously defined skip operation
+    .Rep(3, r => r.Digit(v => acode += v)).OnFail("3 digit area code expected")
+    .AnyCh("- ").OnFail("- or space expected")
+    .Rep(4, r => r.Digit(v => number += v)).OnFail("4 digit number expected")
+ );
+```
 
 [`TOC`](#id-toc)
 
