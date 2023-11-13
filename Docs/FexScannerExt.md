@@ -6,17 +6,32 @@ to add Op(operators) and other methods bound to FexScanner (i.e. the Context).
 
 > **Note:** Several methods record the scanned text in Token (of the underlying scanner)
 > and can be accessed via:
-> - ActToken / ActTrimToken / ActStripToken / ActTrimStripToken.
-> - Act(c => c.Token...).
+> - `ActToken / ActTrimToken / ActStripToken / ActTrimStripToken`.
+> - `Act(c => c.Token...)`.
 
 Basic extension example:
 ```csharp
 public static FexBuilder<T> Ch<T>(this FexBuilder<T> exp, char ch) where T : FexScanner 
     => exp.Op(o => o.IsCh(ch)); // IsCh is a FexScanner method
 ```
-<br/>
-
-**Extensions Reference:**
+---
+### Comments:
+FexScanner can skip line and block comments via `SkipWSC`:
+- Default line comment starts with `//`.
+- Default block comment `/* ... */`.
+- These comments can be configured (or switched off) via the `FexScanner.ConfigComments(...)` method.
+```csharp
+// Set comment configuration:
+// - For block comments Start and End must both be valid to enable block comments. 
+//
+// lineComment:       Line comment (null/empty for none).
+// blockCommentStart: Block comment start (null/empty for none).
+// blockCommentEnd:   Block comment end (null/empty for none).
+// Returns: FexScanner for fluent chaining.
+public FexScanner ConfigComment(string lineComment = "//", string blockCommentStart = "/*", string blockCommentEnd = "*/")
+```
+---
+### Extensions Reference:
 
 | Extensions | Description |
 | :---- | :------ |
@@ -75,7 +90,7 @@ public static FexBuilder<T> Ch<T>(this FexBuilder<T> exp, char ch) where T : Fex
 | ***Whitespace and Comment Skipping:*** |  |
 | ``E:  OptSp(string spaceChars = " \t")`` | Optionally skip given space characters (default = " \t") - creates optional (Opt) Op.<br/> |
 | ``E:  SkipWS(string wsChars = " \r\n\t", bool opt = false)`` | Skip given White Space characters (default: " \r\n\t").<br/><br/>**Parameters:**<br/><code>opt:</code> Make the Op optional or not.<br/><br/>**Returns:**<br/>True if not at Eos after skipping or opt == true else False. |
-| ``E:  SkipWSC(bool termNL = false, string spaceChars = " \t", bool opt = false)`` | Skip given space characters (default = " \t"), newlines (if termNL = false) and comments //... or /\*..\*/ (handles nested comments):<br/>- White space: spaceChars + "\r\n" if termNL is false.<br/>- Set termNL to position Index at the next newline not inside a block comment (/\*..\*/), else the newlines are also skipped.<br/><br/>**Parameters:**<br/><code>opt:</code> Make the Op optional or not.<br/><br/>**Returns:**<br/>True: Whitespace and comments skipped and Index directly after, or no comment error and opt == true.<br/>  False: Eos or comment error (bad comment error is Logged. Use IsScanError() to check) - Index unchanged. |
+| ``E:  SkipWSC(bool termNL = false, string spaceChars = " \t", bool opt = false)`` | Skip White Space and comments:<br/>- White space: spaceChars + "\r\n" if termNL is false.<br/>- Block comments handle nesting and comments embedded in delimited strings.<br/>- Set termNL to true to stop at a newline, including the newline at the end of a line comment.<br/><br/>**Parameters:**<br/><code>termNL:</code> True to stop at a newline, including the newline at the end of a line comment.<br/><code>spaceChars:</code> Characters to regard as white-space (default: " \t").<br/><code>opt:</code> Make the Op optional or not.<br/><br/>**Returns:**<br/>True: Whitespace and comments skipped and Index directly after, or no comment error and opt == true.<br/>  False: Eos or comment error (bad comment error is Logged. Use IsScanError() to check) - Index unchanged. |
 | ``E:  Sp(string spaceChars = " \t")`` | Skip given space characters (default = " \t").<br/><br/>**Returns:**<br/>True if not at Eos after skipping else False. |
 | ***Error Messages:*** |  |
 | ``E:  OnFail(string errorMsg, string errorSource = "Parse error")`` | For convenience, bind OnFail to ErrorLog.<br/> |

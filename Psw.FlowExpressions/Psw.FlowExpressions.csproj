@@ -13,13 +13,13 @@
     <PackageProjectUrl>https://github.com/promicsw/flow-expressions</PackageProjectUrl>
     <RepositoryUrl>https://github.com/promicsw/flow-expressions</RepositoryUrl>
     <PackageTags>parser;parser-builder;flow-logic;c#;flow-expression;</PackageTags>
-    <PackageReleaseNotes>Skip feature added for common skipping actions during parsing.</PackageReleaseNotes>
+    <PackageReleaseNotes>Upgraded to use Scanners v1.1.0 which has configurable comments.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>Nuget.md</PackageReadmeFile>
     <PackageOutputPath>d:\PromicSW_GitHub\LocalNuget\</PackageOutputPath>
     <PackageIcon>PswLogo.png</PackageIcon>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Psw.Scanners" Version="1.0.3" />
+    <PackageReference Include="Psw.Scanners" Version="1.1.0" />
   </ItemGroup>
 
 </Project>

@@ -17,17 +17,32 @@ namespace Psw.FlowExpressions
     /// 
     /// > **Note:** Several methods record the scanned text in Token (of the underlying scanner)
     /// > and can be accessed via:
-    /// > - ActToken / ActTrimToken / ActStripToken / ActTrimStripToken.
-    /// > - Act(c => c.Token...).
+    /// > - `ActToken / ActTrimToken / ActStripToken / ActTrimStripToken`.
+    /// > - `Act(c => c.Token...)`.
     /// 
     /// Basic extension example:
     /// ```csharp
     /// public static FexBuilder<T> Ch<T>(this FexBuilder<T> exp, char ch) where T : FexScanner 
     ///     => exp.Op(o => o.IsCh(ch)); // IsCh is a FexScanner method
     /// ```
-    /// <br/>
-    /// 
-    /// **Extensions Reference:**
+    /// ---
+    /// ### Comments:
+    /// FexScanner can skip line and block comments via `SkipWSC`:
+    /// - Default line comment starts with `//`.
+    /// - Default block comment `/* ... */`.
+    /// - These comments can be configured (or switched off) via the `FexScanner.ConfigComments(...)` method.
+    /// ```csharp
+    /// // Set comment configuration:
+    /// // - For block comments Start and End must both be valid to enable block comments. 
+    /// //
+    /// // lineComment:       Line comment (null/empty for none).
+    /// // blockCommentStart: Block comment start (null/empty for none).
+    /// // blockCommentEnd:   Block comment end (null/empty for none).
+    /// // Returns: FexScanner for fluent chaining.
+    /// public FexScanner ConfigComment(string lineComment = "//", string blockCommentStart = "/*", string blockCommentEnd = "*/")
+    /// ```
+    /// ---
+    /// ### Extensions Reference:
     /// </mdoc>
     public static class FexScannerExt
     {
@@ -505,10 +520,13 @@ namespace Psw.FlowExpressions
             => exp.Op(c => c.SkipWS(wsChars) || opt);
 
         /// <summary>
-        /// Skip given space characters (default = " \t"), newlines (if termNL = false) and comments //... or /*..*/ (handles nested comments):<br/>
+        /// Skip White Space and comments:<br/>
         /// - White space: spaceChars + "\r\n" if termNL is false.<br/>
-        /// - Set termNL to position Index at the next newline not inside a block comment (/*..*/), else the newlines are also skipped.
+        /// - Block comments handle nesting and comments embedded in delimited strings.<br/>
+        /// - Set termNL to true to stop at a newline, including the newline at the end of a line comment.
         /// </summary>
+        /// <param name="termNL">True to stop at a newline, including the newline at the end of a line comment.</param>
+        /// <param name="spaceChars">Characters to regard as white-space (default: " \t").</param>
         /// <param name="opt">Make the Op optional or not.</param>
         /// <returns>
         ///   True: Whitespace and comments skipped and Index directly after, or no comment error and opt == true.<br/>

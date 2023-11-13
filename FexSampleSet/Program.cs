@@ -364,20 +364,28 @@ void ExpressionREPL() {
 
     Stack<double> numStack = new Stack<double>();
 
+    void OpPush(Func<double, double, double> op) 
+        => numStack.Push(op(numStack.Pop(), numStack.Pop()));
+
     var expr = fex.Seq(s => s
         .Ref("factor")
         .RepOneOf(0, -1, r => r
-            .Seq(s => s.Ch('+').Ref("factor").Act(c => numStack.Push(numStack.Pop() + numStack.Pop())))
-            .Seq(s => s.Ch('-').Ref("factor").Act(c => numStack.Push(-numStack.Pop() + numStack.Pop())))
+            //.Seq(s => s.Ch('+').Ref("factor").Act(c => numStack.Push(numStack.Pop() + numStack.Pop())))
+            .Seq(s => s.Ch('+').Ref("factor").Act(c => OpPush((s0, s1) => s0 + s1)))
+            //.Seq(s => s.Ch('-').Ref("factor").Act(c => numStack.Push(-numStack.Pop() + numStack.Pop())))
+            .Seq(s => s.Ch('-').Ref("factor").Act(c => OpPush((s0, s1) => s1 - s0)))
          ));
 
     var factor = fex.Seq(s => s.RefName("factor")
         .Ref("unary")
         .RepOneOf(0, -1, r => r
-            .Seq(s => s.Ch('*').Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
+            //.Seq(s => s.Ch('*').Ref("unary").Act(c => numStack.Push(numStack.Pop() * numStack.Pop())))
+            .Seq(s => s.Ch('*').Ref("unary").Act(c => OpPush((s0, s1) => s0 * s1)))
+            .Seq(s => s.Ch('^').Ref("unary").Act(c => OpPush((s0, s1) => Math.Pow(s1, s0))))
             .Seq(s => s.Ch('/').Ref("unary")
                        .Op(c => numStack.Peek() != 0).OnFail("Division by 0") // Trap division by 0
-                       .Act(c => numStack.Push(1 / numStack.Pop() * numStack.Pop())))
+                       //.Act(c => numStack.Push(1 / numStack.Pop() * numStack.Pop())))
+                       .Act(c => OpPush((s0, s1) => s1 / s0)))
          ));
 
     var unary = fex.Seq(s => s.RefName("unary")
@@ -389,8 +397,9 @@ void ExpressionREPL() {
     var primary = fex.Seq(s => s.RefName("primary")
         .OneOf(o => o
             .Seq(e => e.Ch('(').Fex(expr).Ch(')').OnFail(") expected"))
-            .Seq(s => s.NumDecimal(n => numStack.Push(n)))
+            .Seq(s => s.IsString("pi").Act(c => numStack.Push(Math.PI)))  // Pi
             .Seq(s => s.Ch('a').Act(c => numStack.Push(ans)))  // a is previous answer
+            .Seq(s => s.NumDecimal(n => numStack.Push(n)))
          ).OnFail("Primary expected"));
 
     var exprEval = fex.Seq(s => s.GlobalPreOp(c => c.SkipSp()).Fex(expr).IsEos().OnFail("invalid expression"));
