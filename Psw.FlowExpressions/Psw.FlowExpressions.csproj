@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -13,13 +13,13 @@
     <PackageProjectUrl>https://github.com/promicsw/flow-expressions</PackageProjectUrl>
     <RepositoryUrl>https://github.com/promicsw/flow-expressions</RepositoryUrl>
     <PackageTags>parser;parser-builder;flow-logic;c#;flow-expression;</PackageTags>
-    <PackageReleaseNotes>Upgraded to use Scanners v1.1.0 which has configurable comments.</PackageReleaseNotes>
+    <PackageReleaseNotes>Net 8 support added, net 7 removed.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>Nuget.md</PackageReadmeFile>
     <PackageOutputPath>d:\PromicSW_GitHub\LocalNuget\</PackageOutputPath>
     <PackageIcon>PswLogo.png</PackageIcon>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Psw.Scanners" Version="1.1.0" />
+    <PackageReference Include="Psw.Scanners" Version="1.1.1" />
   </ItemGroup>
 
 </Project>
